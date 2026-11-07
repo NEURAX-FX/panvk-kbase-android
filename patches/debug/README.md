@@ -46,5 +46,3 @@ bytes. The observed `wl_shm_pool.create_buffer` and repeated
 `wl_surface.attach(wl_buffer)` calls confirm software SHM presentation in
 the existing reproduction; merely advertising dmabuf v3 is not evidence
 of dmabuf submission.
-
-[executed on device: fedora (fe2b6f62-ce8b-4f66-8e11-197206b1fbed)]

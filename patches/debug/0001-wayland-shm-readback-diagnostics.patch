@@ -49,5 +49,3 @@
     }
  
     VkResult ret = wsi_wl_swapchain_update_colorspace(chain);
-
-[executed on device: fedora (fe2b6f62-ce8b-4f66-8e11-197206b1fbed)]
