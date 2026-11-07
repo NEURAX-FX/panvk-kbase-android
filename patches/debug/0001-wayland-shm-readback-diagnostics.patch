@@ -1,0 +1,53 @@
+--- a/src/vulkan/wsi/wsi_common_wayland.c
++++ b/src/vulkan/wsi/wsi_common_wayland.c
+@@ -3337,6 +3337,48 @@
+       wsi_image_invalidate_cpu_map(&chain->base, &image->base);
+       memcpy(image->shm_ptr, image->base.cpu_map,
+              image->base.row_pitches[0] * chain->extent.height);
++
++      /* Temporary, opt-in instrumentation of the software Wayland WSI path.
++       * Compare CPU readback with the SHM bytes actually handed to Wayland.
++       * Enabled only by PANVK_WSI_SHM_DIAG=1 and limited to eight frames.
++       */
++      const char *shm_diag = getenv("PANVK_WSI_SHM_DIAG");
++      if (shm_diag && shm_diag[0] == 0x31) {
++         static unsigned shm_diag_frames;
++         if (shm_diag_frames < 8) {
++            const unsigned frame = ++shm_diag_frames;
++            const size_t n = (size_t)image->base.row_pitches[0] *
++                             chain->extent.height;
++            const uint8_t *src = image->base.cpu_map;
++            const uint8_t *dst = image->shm_ptr;
++            uint64_t src_hash = UINT64_C(14695981039346656037);
++            uint64_t dst_hash = UINT64_C(14695981039346656037);
++            size_t src_nonzero = 0, dst_nonzero = 0;
++            for (size_t i = 0; i < n; i++) {
++               src_hash = (src_hash ^ src[i]) * UINT64_C(1099511628211);
++               dst_hash = (dst_hash ^ dst[i]) * UINT64_C(1099511628211);
++               src_nonzero += src[i] != 0;
++               dst_nonzero += dst[i] != 0;
++            }
++            fprintf(stderr,
++                    "PANVK_WSI_SHM_DIAG frame=%u image=%u size=%ux%u "
++                    "pitch=%u bytes=%zu noncoherent=%d "
++                    "src_hash=%016llx dst_hash=%016llx "
++                    "src_nonzero=%zu dst_nonzero=%zu equal=%d "
++                    "src_px=%02x%02x%02x%02x dst_px=%02x%02x%02x%02x
++",
++                    frame, image_index, chain->extent.width, chain->extent.height,
++                    image->base.row_pitches[0], n,
++                    image->base.cpu_map_noncoherent,
++                    (unsigned long long)src_hash,
++                    (unsigned long long)dst_hash,
++                    src_nonzero, dst_nonzero, memcmp(src, dst, n) == 0,
++                    n > 0 ? src[0] : 0, n > 1 ? src[1] : 0,
++                    n > 2 ? src[2] : 0, n > 3 ? src[3] : 0,
++                    n > 0 ? dst[0] : 0, n > 1 ? dst[1] : 0,
++                    n > 2 ? dst[2] : 0, n > 3 ? dst[3] : 0);
++         }
++      }
+    }
+ 
+    VkResult ret = wsi_wl_swapchain_update_colorspace(chain);
+
+[executed on device: fedora (fe2b6f62-ce8b-4f66-8e11-197206b1fbed)]
