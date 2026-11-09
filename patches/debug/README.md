@@ -140,12 +140,19 @@ not establish visible Wayland output.
 
 ## Deploying the patched EGL runtime
 
-Copy the staged tree to the target without touching `/usr`:
+On the build host, package the `stage/` tree produced by `--with-egl-zink`, then
+copy the archive to the target through the available device-transfer path:
 
 ```bash
-# on the target, from the staged tarball
+tar -czf /tmp/egl-zink-fix.tar.gz \
+  -C /home/neurax/panvk-wsi-debug/artifacts/egl-zink-fix/stage .
+```
+
+On the target, unpack it without touching `/usr`:
+
+```bash
 mkdir -p /root/panvk-wsi-debug/egl
-tar -xzf egl-zink-fix.tar.gz -C /root/panvk-wsi-debug/egl
+tar -xzf /tmp/egl-zink-fix.tar.gz -C /root/panvk-wsi-debug/egl
 ```
 
 The run must select both the staged EGL stack and the debug ICD by path.
@@ -231,12 +238,12 @@ The failure is in EGL fallback state, not PanVK cache synchronization. `eglIniti
 
 ## Separate Noctalia stale-surface failure
 
-The original GDB/Wayland trace shows a separate client/surface-lifetime error. Noctalia destroyed `wl_surface#221`; the compositor then sent `delete_id(221)`. The client reused ID 221 for a `wl_callback` requested by `wl_surface#265.frame`, after which Mesa's Vulkan display queue sent `wl_surface#221.attach`. The compositor rejected that request as `invalid method 1, object wl_callback#221`. Therefore the protocol allocator did not duplicate a still-live ID: Mesa submitted a stale surface request after Noctalia had destroyed that surface and the ID had been reused. The resulting display failure is downstream of that protocol error.
+The original GDB/Wayland trace captures a stale-surface request. Noctalia sends `wl_surface#221.destroy()`; the server returns `delete_id(221)`, and libwayland then reuses ID 221 for the callback created by `wl_surface#265.frame`. Mesa's Vulkan WSI subsequently sends `attach` to that ID, so the compositor rejects the surface opcode on a `wl_callback`. The allocator is behaving correctly; the remaining question is why Mesa still has a present to submit after the native surface's destroy request.
 
-The trace also records a 2392x1080 refresh change immediately before surface teardown and an Anland consumer-session generation change at 19:09:33.251, about 0.66 seconds after the rejected request. This is temporal correlation, not proof that the output/session change caused the stale request. The trace does not include EGLSurface/VkSurface destruction calls or the relevant proxy addresses, so it cannot distinguish premature native-surface destruction by Noctalia from a retained Zink/PanVK surface past EGL teardown. No speculative lifetime workaround is included.
+The Anland log records a refresh-mode change before teardown, then the compositor protocol error at 19:09:32.590, followed by consumer-session generation 47 at 19:09:33.251. The logged generation change is downstream of the invalid request; the earlier mode change could have triggered surface recreation, but timing alone does not prove causation. Static source tracing shows Zink disables its asynchronous-present path for `KOPPER_WAYLAND` and drains its flush queue before synchronous presentation when threaded submission is active. This rules out that optional Zink background-present path, not every EGL/Zink lifetime race.
 
-The separate `noctalia-patched-live.log` records `failed to flush Wayland display before poll: display_error=22`; its log is from a different run and contains `invalid object 418` / failed swapchain messages beforehand. Available evidence does not correlate that EINVAL to the callback-221 run or prove a consumer-session cause. Further source-level lifecycle instrumentation plus a controlled reproduction is required before a second code fix.
+The trace has no `eglDestroySurface`/`vkDestroySurfaceKHR` call order or Wayland proxy addresses. It cannot distinguish Noctalia destroying the native `wl_surface` before EGL/WSI teardown completes from Mesa presenting after EGL teardown. The separate patched Noctalia run reports `invalid object 216`, then Zink swapchain failures and `failed to flush Wayland display before poll: display_error=22` (EINVAL), but has no paired Anland log and does not correlate to the callback-221 trace. No PanVK lifetime workaround is justified by these captures.
 
 The 120-frame numeric screen scan found no blue-to-gray pollution in idle groups 0–3 or notification groups 4–7. It found one isolated pixel in panel group 8. Groups 10–11 reported a stable 90566-pixel region after the panel-close phase; because this is a persistent post-transition region, not transient contamination during idle/notifications, it is not counted as a confirmed shell flash. Raw frames remain on the target in `/root/panvk-wsi-debug/evidence/cv10-20261108-104441/`; they were analyzed numerically without viewing screenshots.
 
-Kitty's saved launch log reports a missing portal Settings method and `No directories to watch provided`, not a GL renderer or EGL failure. The compositor/socket was no longer running during the resumed inspection, so Kitty's desktop-GL rendering could not be revalidated without restarting the user's session.
+Kitty's saved log records OpenGL context creation and a desktop OpenGL 4.6 Mesa 26.3.0-devel version string, alongside PanVK/kbase initialization. It also reports a missing portal Settings method and `No directories to watch provided`. The log has no `GL_RENDERER` line or Kitty pixel capture, so it verifies context creation but not visible terminal drawing. The compositor was unavailable for a fresh capture during resumed inspection.
