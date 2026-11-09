@@ -1,6 +1,6 @@
 --- a/src/vulkan/wsi/wsi_common_wayland.c
 +++ b/src/vulkan/wsi/wsi_common_wayland.c
-@@ -3337,6 +3337,48 @@
+@@ -3337,6 +3337,47 @@
        wsi_image_invalidate_cpu_map(&chain->base, &image->base);
        memcpy(image->shm_ptr, image->base.cpu_map,
               image->base.row_pitches[0] * chain->extent.height);
@@ -32,8 +32,7 @@
 +                    "pitch=%u bytes=%zu noncoherent=%d "
 +                    "src_hash=%016llx dst_hash=%016llx "
 +                    "src_nonzero=%zu dst_nonzero=%zu equal=%d "
-+                    "src_px=%02x%02x%02x%02x dst_px=%02x%02x%02x%02x
-+",
++                    "src_px=%02x%02x%02x%02x dst_px=%02x%02x%02x%02x\n",
 +                    frame, image_index, chain->extent.width, chain->extent.height,
 +                    image->base.row_pitches[0], n,
 +                    image->base.cpu_map_noncoherent,
