@@ -606,3 +606,125 @@ cp /root/panvk-wsi-debug/backup-sync-fd-4fda984e/panvk-kbase.json \
 
 Restart affected applications after changing the selection. The rollback copy
 is retained but was not executed after successful verification.
+
+## Default redeployment with EGL/GBM and Zink (2026-11-10)
+
+This deployment supersedes the selectors in the earlier installation sections.
+The user requested the fixed driver as the default, default Zink OpenGL, and
+fresh hardware verification. No driver source was changed during redeployment.
+
+### Installed selection
+
+- `/opt/panvk/current` now points to `/opt/panvk/e7bfef6-gbm`.
+- That directory contains the fixed PanVK ICD, the GBM-enabled EGL vendor,
+  GBM core/backend, DRI modules, and the matching patched Gallium library.
+- The ICD is byte-identical to the previously verified `sync-fd-4fda984e` ICD.
+  Gallium is byte-identical to the previous GLVND deployment. EGL, GBM, and
+  backend modules come from `artifacts/egl-gbm-aarch64` above.
+- The installed EGL vendor uses RPATH `$ORIGIN`; the GBM backend and DRI
+  module use `$ORIGIN/..` to find their matching Gallium library.
+- `/etc/vulkan/icd.d/panvk-kbase.json` and the existing GLVND Mesa manifest
+  select the libraries through `/opt/panvk/current/lib64`.
+- `/etc/ld.so.conf.d/00-panvk.conf` adds `/opt/panvk/current/lib64`; `ldconfig`
+  activates its GBM library. Fedora's GLVND dispatch libraries are retained.
+- Fedora's GLX vendor/Gallium 26.2.6 remains in use for GLX applications;
+  it selects Zink and the fixed PanVK ICD. EGL applications and Xvfb glamor
+  use the patched EGL/Gallium 26.3.0-devel libraries.
+
+The existing canonical `/etc/opt/mt6989/graphics.env` now contains:
+
+```sh
+MESA_LOADER_DRIVER_OVERRIDE=zink
+GALLIUM_DRIVER=zink
+VK_LOADER_DRIVERS_SELECT=panvk-kbase.json
+LIBGL_DRIVERS_PATH=/opt/panvk/current/lib64/dri
+GBM_BACKENDS_PATH=/opt/panvk/current/lib64/gbm
+```
+
+`/etc/environment.d/90-panvk-zink.conf` links to this file for systemd user
+services. `/etc/profile.d/90-panvk-zink.sh` sources and exports it for login
+shells. The existing `with-panvk-zink` wrapper reads the same canonical file.
+Clean Bash and Zsh logins, and a fresh `systemd-run --user` process, all
+reported the five values above. This does not inject environment variables
+into arbitrary system services or already-running processes. No global
+`LD_LIBRARY_PATH`, `VK_DRIVER_FILES`, `VK_ICD_FILENAMES`, or
+`__EGL_VENDOR_LIBRARY_FILENAMES` override was installed.
+
+### Fresh target verification
+
+All graphics tests started from an empty environment followed by a normal
+Bash login, without test-only driver paths. The fd soft limit stayed 1024.
+
+| Check | Result |
+|---|---|
+| Seven sync-fd lifecycle modes | 4096 iterations each; fd delta 0 in every mode |
+| Four Wayland surface lifetime modes | 128 commits each; consumer `bad=0` |
+| Fresh Xvfb glamor + Picom GLX + glxgears | Zink / Mali-G720 / MESA_PANVK; accelerated OpenGL 4.6 |
+| Alternating RGB window and composited overlay readbacks | Final run: 2048 frames passed in 27.15 seconds |
+| Xvfb fd samples | 21 throughout |
+| Picom fd samples | 14–16, returning to 14; temporary sync files did not accumulate |
+| glxgears fd samples | 8 throughout |
+
+Process mappings confirm Xvfb loaded the newly installed EGL, GBM core,
+GBM backend, Gallium, and fixed PanVK ICD. Picom and glxgears loaded Fedora's
+GLX/Gallium and the same fixed ICD. The captured Picom overlay shows the
+colored window and rendered gears, not a black frame; it remains on the
+device at `/root/panvk-wsi-debug/logs/redeploy-composited.png`.
+
+Two earlier harness runs must not be hidden: one expected full-opacity red
+but the existing Picom configuration intentionally uses inactive opacity
+0.97 (the correct value over black is `0xf70000`). After correcting that
+expectation, another run timed out at frame 184 after two seconds with an
+older overlay color, although the source-window pixel was correct. A final
+run with stall diagnostics completed all 2048 frames without a stall and
+without a production code/configuration change. The isolated earlier stale
+frame's cause is **not established**; this deployment proves the fd lifetime
+fix and the successful rendering run, not the absence of all intermittent
+compositor issues. Its failure output is retained in `redeploy-runtime.log`.
+
+At deployment time no Xvfb, Picom, or niri session was running. The verification
+started fresh temporary Xvfb/Picom/glxgears processes and stopped only those
+processes afterward. The disabled `xlibre-headless.service` was not enabled or
+started. No Android physical display/KMS device was touched. This is not a
+new live niri/Noctalia/Android-output validation.
+
+Evidence in `patches/debug/evidence/`:
+
+- `redeploy-install.log`: installed library hashes and retained GLVND dispatch.
+- `redeploy-regressions.log`: seven fd and four Wayland regression logs.
+- `redeploy-graphics.log`: renderer, sampled fd counts, process maps, final pass.
+- `redeploy-runtime.log`: Xvfb/Picom/glxgears logs and earlier overlay timeout.
+
+Re-run the permanent regressions using the installed defaults:
+
+```bash
+env -i HOME=/root PATH=/usr/sbin:/usr/bin:/sbin:/bin \
+  XDG_RUNTIME_DIR=/run/user/0 /bin/bash -lc '
+    set -eu
+    ulimit -n 1024
+    for mode in wait reset signal replace destroy semaphore timeout; do
+      /root/panvk-wsi-debug/sync-fd-lifetime-probe "$mode" 4096
+    done
+    for mode in recreate rebind make-current destroy-current; do
+      /root/panvk-wsi-debug/ab/surface-lifetime-probe-v2 "--$mode"
+    done
+  '
+```
+
+### Rollback
+
+The previous manifests, canonical graphics environment, and `current` link
+are retained under `/root/panvk-wsi-debug/backup-redeploy-e7bfef6`. Restore
+that immediately previous selection with:
+
+```sh
+sh /root/panvk-wsi-debug/backup-redeploy-e7bfef6/rollback.sh
+```
+
+The script restores the old EGL and ICD manifests, old canonical environment,
+and old `current` link; removes this deployment's profile/environment links
+and linker-cache configuration; and refreshes the linker cache and user
+manager environment. Versioned libraries remain installed. Its shell syntax
+was checked; rollback was not executed after deployment. Restart graphics
+applications and log in again after rollback. Existing shells can instead
+load the new deployment now with `. /etc/profile.d/90-panvk-zink.sh`.

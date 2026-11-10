@@ -1,0 +1,758 @@
+=== fd wait ===
+MESA: info: kbase: CSF driver, uAPI version 1.21, page_size=4096
+MESA: info: kbase: coherency mode 0 (ACE-Lite), shaderDeviceClock off (strict, PANVK_KBASE_STRICT_DEVICE_CLOCK=0 = 114), coherent pools off (PANVK_KBASE_COHERENT_POOLS=1 enables)
+MESA: info: kbase: timestamp calibration: CSF, keeping cntfrq 13000000 Hz (PANVK_KBASE_TS_CALIBRATE=1 = measure)
+MESA: info: panvk: gpu_id 0xc8700000 variant 0x4 arch v12 model Mali-G720 texture_features 0xc7fe001e 0 0 0
+MESA: info: panvk: BC emulation on, lowmem (native compressed mask 0xc7fe001e)
+WARNING: panvk is not a conformant Vulkan implementation, testing use only.
+DEVICE Mali-G720-Immortalis MC12 DRIVER panvk Mesa 26.3.0-devel (git-13c98a0341, p0175, 2026-11-10)
+MESA: info: kbase: CSF driver, uAPI version 1.21, page_size=4096
+MESA: info: kbase: coherency mode 0 (ACE-Lite), shaderDeviceClock off (strict, PANVK_KBASE_STRICT_DEVICE_CLOCK=0 = 114), coherent pools off (PANVK_KBASE_COHERENT_POOLS=1 enables)
+MESA: info: kbase: timestamp calibration: CSF, keeping cntfrq 13000000 Hz (PANVK_KBASE_TS_CALIBRATE=1 = measure)
+MESA: info: kbase: mem_alloc via ALLOC_EX
+MESA: info: kbase: queue_group_create layout=112 bytes, 3 CS, csi_handlers 0x1
+MESA: info: kbase: tiler heaps 4 initial / 400 max chunks of 1024 KiB
+MESA: info: kbase: tiler_heap_init layout=16 bytes
+mode=wait iterations=4096 fd_before=9 fd_after=9 delta=0
+PASS: sync payload lifecycle returns to the baseline fd count
+
+=== fd reset ===
+MESA: info: kbase: CSF driver, uAPI version 1.21, page_size=4096
+MESA: info: kbase: coherency mode 0 (ACE-Lite), shaderDeviceClock off (strict, PANVK_KBASE_STRICT_DEVICE_CLOCK=0 = 114), coherent pools off (PANVK_KBASE_COHERENT_POOLS=1 enables)
+MESA: info: kbase: timestamp calibration: CSF, keeping cntfrq 13000000 Hz (PANVK_KBASE_TS_CALIBRATE=1 = measure)
+MESA: info: panvk: gpu_id 0xc8700000 variant 0x4 arch v12 model Mali-G720 texture_features 0xc7fe001e 0 0 0
+MESA: info: panvk: BC emulation on, lowmem (native compressed mask 0xc7fe001e)
+WARNING: panvk is not a conformant Vulkan implementation, testing use only.
+DEVICE Mali-G720-Immortalis MC12 DRIVER panvk Mesa 26.3.0-devel (git-13c98a0341, p0175, 2026-11-10)
+MESA: info: kbase: CSF driver, uAPI version 1.21, page_size=4096
+MESA: info: kbase: coherency mode 0 (ACE-Lite), shaderDeviceClock off (strict, PANVK_KBASE_STRICT_DEVICE_CLOCK=0 = 114), coherent pools off (PANVK_KBASE_COHERENT_POOLS=1 enables)
+MESA: info: kbase: timestamp calibration: CSF, keeping cntfrq 13000000 Hz (PANVK_KBASE_TS_CALIBRATE=1 = measure)
+MESA: info: kbase: mem_alloc via ALLOC_EX
+MESA: info: kbase: queue_group_create layout=112 bytes, 3 CS, csi_handlers 0x1
+MESA: info: kbase: tiler heaps 4 initial / 400 max chunks of 1024 KiB
+MESA: info: kbase: tiler_heap_init layout=16 bytes
+mode=reset iterations=4096 fd_before=9 fd_after=9 delta=0
+PASS: sync payload lifecycle returns to the baseline fd count
+
+=== fd signal ===
+MESA: info: kbase: CSF driver, uAPI version 1.21, page_size=4096
+MESA: info: kbase: coherency mode 0 (ACE-Lite), shaderDeviceClock off (strict, PANVK_KBASE_STRICT_DEVICE_CLOCK=0 = 114), coherent pools off (PANVK_KBASE_COHERENT_POOLS=1 enables)
+MESA: info: kbase: timestamp calibration: CSF, keeping cntfrq 13000000 Hz (PANVK_KBASE_TS_CALIBRATE=1 = measure)
+MESA: info: panvk: gpu_id 0xc8700000 variant 0x4 arch v12 model Mali-G720 texture_features 0xc7fe001e 0 0 0
+MESA: info: panvk: BC emulation on, lowmem (native compressed mask 0xc7fe001e)
+WARNING: panvk is not a conformant Vulkan implementation, testing use only.
+DEVICE Mali-G720-Immortalis MC12 DRIVER panvk Mesa 26.3.0-devel (git-13c98a0341, p0175, 2026-11-10)
+MESA: info: kbase: CSF driver, uAPI version 1.21, page_size=4096
+MESA: info: kbase: coherency mode 0 (ACE-Lite), shaderDeviceClock off (strict, PANVK_KBASE_STRICT_DEVICE_CLOCK=0 = 114), coherent pools off (PANVK_KBASE_COHERENT_POOLS=1 enables)
+MESA: info: kbase: timestamp calibration: CSF, keeping cntfrq 13000000 Hz (PANVK_KBASE_TS_CALIBRATE=1 = measure)
+MESA: info: kbase: mem_alloc via ALLOC_EX
+MESA: info: kbase: queue_group_create layout=112 bytes, 3 CS, csi_handlers 0x1
+MESA: info: kbase: tiler heaps 4 initial / 400 max chunks of 1024 KiB
+MESA: info: kbase: tiler_heap_init layout=16 bytes
+mode=signal iterations=4096 fd_before=9 fd_after=9 delta=0
+PASS: sync payload lifecycle returns to the baseline fd count
+
+=== fd replace ===
+MESA: info: kbase: CSF driver, uAPI version 1.21, page_size=4096
+MESA: info: kbase: coherency mode 0 (ACE-Lite), shaderDeviceClock off (strict, PANVK_KBASE_STRICT_DEVICE_CLOCK=0 = 114), coherent pools off (PANVK_KBASE_COHERENT_POOLS=1 enables)
+MESA: info: kbase: timestamp calibration: CSF, keeping cntfrq 13000000 Hz (PANVK_KBASE_TS_CALIBRATE=1 = measure)
+MESA: info: panvk: gpu_id 0xc8700000 variant 0x4 arch v12 model Mali-G720 texture_features 0xc7fe001e 0 0 0
+MESA: info: panvk: BC emulation on, lowmem (native compressed mask 0xc7fe001e)
+WARNING: panvk is not a conformant Vulkan implementation, testing use only.
+DEVICE Mali-G720-Immortalis MC12 DRIVER panvk Mesa 26.3.0-devel (git-13c98a0341, p0175, 2026-11-10)
+MESA: info: kbase: CSF driver, uAPI version 1.21, page_size=4096
+MESA: info: kbase: coherency mode 0 (ACE-Lite), shaderDeviceClock off (strict, PANVK_KBASE_STRICT_DEVICE_CLOCK=0 = 114), coherent pools off (PANVK_KBASE_COHERENT_POOLS=1 enables)
+MESA: info: kbase: timestamp calibration: CSF, keeping cntfrq 13000000 Hz (PANVK_KBASE_TS_CALIBRATE=1 = measure)
+MESA: info: kbase: mem_alloc via ALLOC_EX
+MESA: info: kbase: queue_group_create layout=112 bytes, 3 CS, csi_handlers 0x1
+MESA: info: kbase: tiler heaps 4 initial / 400 max chunks of 1024 KiB
+MESA: info: kbase: tiler_heap_init layout=16 bytes
+mode=replace iterations=4096 fd_before=9 fd_after=9 delta=0
+PASS: sync payload lifecycle returns to the baseline fd count
+
+=== fd destroy ===
+MESA: info: kbase: CSF driver, uAPI version 1.21, page_size=4096
+MESA: info: kbase: coherency mode 0 (ACE-Lite), shaderDeviceClock off (strict, PANVK_KBASE_STRICT_DEVICE_CLOCK=0 = 114), coherent pools off (PANVK_KBASE_COHERENT_POOLS=1 enables)
+MESA: info: kbase: timestamp calibration: CSF, keeping cntfrq 13000000 Hz (PANVK_KBASE_TS_CALIBRATE=1 = measure)
+MESA: info: panvk: gpu_id 0xc8700000 variant 0x4 arch v12 model Mali-G720 texture_features 0xc7fe001e 0 0 0
+MESA: info: panvk: BC emulation on, lowmem (native compressed mask 0xc7fe001e)
+WARNING: panvk is not a conformant Vulkan implementation, testing use only.
+DEVICE Mali-G720-Immortalis MC12 DRIVER panvk Mesa 26.3.0-devel (git-13c98a0341, p0175, 2026-11-10)
+MESA: info: kbase: CSF driver, uAPI version 1.21, page_size=4096
+MESA: info: kbase: coherency mode 0 (ACE-Lite), shaderDeviceClock off (strict, PANVK_KBASE_STRICT_DEVICE_CLOCK=0 = 114), coherent pools off (PANVK_KBASE_COHERENT_POOLS=1 enables)
+MESA: info: kbase: timestamp calibration: CSF, keeping cntfrq 13000000 Hz (PANVK_KBASE_TS_CALIBRATE=1 = measure)
+MESA: info: kbase: mem_alloc via ALLOC_EX
+MESA: info: kbase: queue_group_create layout=112 bytes, 3 CS, csi_handlers 0x1
+MESA: info: kbase: tiler heaps 4 initial / 400 max chunks of 1024 KiB
+MESA: info: kbase: tiler_heap_init layout=16 bytes
+mode=destroy iterations=4096 fd_before=9 fd_after=9 delta=0
+PASS: sync payload lifecycle returns to the baseline fd count
+
+=== fd semaphore ===
+MESA: info: kbase: CSF driver, uAPI version 1.21, page_size=4096
+MESA: info: kbase: coherency mode 0 (ACE-Lite), shaderDeviceClock off (strict, PANVK_KBASE_STRICT_DEVICE_CLOCK=0 = 114), coherent pools off (PANVK_KBASE_COHERENT_POOLS=1 enables)
+MESA: info: kbase: timestamp calibration: CSF, keeping cntfrq 13000000 Hz (PANVK_KBASE_TS_CALIBRATE=1 = measure)
+MESA: info: panvk: gpu_id 0xc8700000 variant 0x4 arch v12 model Mali-G720 texture_features 0xc7fe001e 0 0 0
+MESA: info: panvk: BC emulation on, lowmem (native compressed mask 0xc7fe001e)
+WARNING: panvk is not a conformant Vulkan implementation, testing use only.
+DEVICE Mali-G720-Immortalis MC12 DRIVER panvk Mesa 26.3.0-devel (git-13c98a0341, p0175, 2026-11-10)
+MESA: info: kbase: CSF driver, uAPI version 1.21, page_size=4096
+MESA: info: kbase: coherency mode 0 (ACE-Lite), shaderDeviceClock off (strict, PANVK_KBASE_STRICT_DEVICE_CLOCK=0 = 114), coherent pools off (PANVK_KBASE_COHERENT_POOLS=1 enables)
+MESA: info: kbase: timestamp calibration: CSF, keeping cntfrq 13000000 Hz (PANVK_KBASE_TS_CALIBRATE=1 = measure)
+MESA: info: kbase: mem_alloc via ALLOC_EX
+MESA: info: kbase: queue_group_create layout=112 bytes, 3 CS, csi_handlers 0x1
+MESA: info: kbase: tiler heaps 4 initial / 400 max chunks of 1024 KiB
+MESA: info: kbase: tiler_heap_init layout=16 bytes
+mode=semaphore iterations=4096 fd_before=9 fd_after=9 delta=0
+PASS: sync payload lifecycle returns to the baseline fd count
+
+=== fd timeout ===
+MESA: info: kbase: CSF driver, uAPI version 1.21, page_size=4096
+MESA: info: kbase: coherency mode 0 (ACE-Lite), shaderDeviceClock off (strict, PANVK_KBASE_STRICT_DEVICE_CLOCK=0 = 114), coherent pools off (PANVK_KBASE_COHERENT_POOLS=1 enables)
+MESA: info: kbase: timestamp calibration: CSF, keeping cntfrq 13000000 Hz (PANVK_KBASE_TS_CALIBRATE=1 = measure)
+MESA: info: panvk: gpu_id 0xc8700000 variant 0x4 arch v12 model Mali-G720 texture_features 0xc7fe001e 0 0 0
+MESA: info: panvk: BC emulation on, lowmem (native compressed mask 0xc7fe001e)
+WARNING: panvk is not a conformant Vulkan implementation, testing use only.
+DEVICE Mali-G720-Immortalis MC12 DRIVER panvk Mesa 26.3.0-devel (git-13c98a0341, p0175, 2026-11-10)
+MESA: info: kbase: CSF driver, uAPI version 1.21, page_size=4096
+MESA: info: kbase: coherency mode 0 (ACE-Lite), shaderDeviceClock off (strict, PANVK_KBASE_STRICT_DEVICE_CLOCK=0 = 114), coherent pools off (PANVK_KBASE_COHERENT_POOLS=1 enables)
+MESA: info: kbase: timestamp calibration: CSF, keeping cntfrq 13000000 Hz (PANVK_KBASE_TS_CALIBRATE=1 = measure)
+MESA: info: kbase: mem_alloc via ALLOC_EX
+MESA: info: kbase: queue_group_create layout=112 bytes, 3 CS, csi_handlers 0x1
+MESA: info: kbase: tiler heaps 4 initial / 400 max chunks of 1024 KiB
+MESA: info: kbase: tiler_heap_init layout=16 bytes
+mode=timeout iterations=4096 fd_before=10 fd_after=10 delta=0
+PASS: sync payload lifecycle returns to the baseline fd count
+
+=== wayland recreate ===
+MESA: info: kbase: CSF driver, uAPI version 1.21, page_size=4096
+MESA: info: kbase: coherency mode 0 (ACE-Lite), shaderDeviceClock off (strict, PANVK_KBASE_STRICT_DEVICE_CLOCK=0 = 114), coherent pools off (PANVK_KBASE_COHERENT_POOLS=1 enables)
+MESA: info: kbase: timestamp calibration: CSF, keeping cntfrq 13000000 Hz (PANVK_KBASE_TS_CALIBRATE=1 = measure)
+MESA: info: panvk: gpu_id 0xc8700000 variant 0x4 arch v12 model Mali-G720 texture_features 0xc7fe001e 0 0 0
+MESA: info: panvk: BC emulation on, lowmem (native compressed mask 0xc7fe001e)
+WARNING: panvk is not a conformant Vulkan implementation, testing use only.
+MESA: info: kbase: CSF driver, uAPI version 1.21, page_size=4096
+MESA: info: kbase: coherency mode 0 (ACE-Lite), shaderDeviceClock off (strict, PANVK_KBASE_STRICT_DEVICE_CLOCK=0 = 114), coherent pools off (PANVK_KBASE_COHERENT_POOLS=1 enables)
+MESA: info: kbase: timestamp calibration: CSF, keeping cntfrq 13000000 Hz (PANVK_KBASE_TS_CALIBRATE=1 = measure)
+MESA: info: kbase: mem_alloc via ALLOC_EX
+MESA: info: kbase: queue_group_create layout=112 bytes, 3 CS, csi_handlers 0x1
+MESA: info: kbase: tiler heaps 4 initial / 400 max chunks of 1024 KiB
+MESA: info: kbase: tiler_heap_init layout=16 bytes
+MESA: info: kbase: CSF driver, uAPI version 1.21, page_size=4096
+MESA: info: kbase: coherency mode 0 (ACE-Lite), shaderDeviceClock off (strict, PANVK_KBASE_STRICT_DEVICE_CLOCK=0 = 114), coherent pools off (PANVK_KBASE_COHERENT_POOLS=1 enables)
+MESA: info: kbase: timestamp calibration: CSF, keeping cntfrq 13000000 Hz (PANVK_KBASE_TS_CALIBRATE=1 = measure)
+MESA: info: panvk: gpu_id 0xc8700000 variant 0x4 arch v12 model Mali-G720 texture_features 0xc7fe001e 0 0 0
+MESA: info: panvk: BC emulation on, lowmem (native compressed mask 0xc7fe001e)
+WARNING: panvk is not a conformant Vulkan implementation, testing use only.
+MESA: info: kbase: CSF driver, uAPI version 1.21, page_size=4096
+MESA: info: kbase: coherency mode 0 (ACE-Lite), shaderDeviceClock off (strict, PANVK_KBASE_STRICT_DEVICE_CLOCK=0 = 114), coherent pools off (PANVK_KBASE_COHERENT_POOLS=1 enables)
+MESA: info: kbase: timestamp calibration: CSF, keeping cntfrq 13000000 Hz (PANVK_KBASE_TS_CALIBRATE=1 = measure)
+MESA: info: kbase: mem_alloc via ALLOC_EX
+MESA: info: kbase: queue_group_create layout=112 bytes, 3 CS, csi_handlers 0x1
+MESA: info: kbase: tiler heaps 4 initial / 400 max chunks of 1024 KiB
+MESA: info: kbase: tiler_heap_init layout=16 bytes
+CLIENT iteration=0 native=0xc253b80 id=6 reuse=0 mode=recreate
+GL_RENDERER=zink Vulkan 1.4(Mali-G720-Immortalis MC12 (MESA_PANVK))
+CLIENT iteration=1 native=0xc253b80 id=22 reuse=1 mode=recreate
+CLIENT iteration=2 native=0xc253b80 id=32 reuse=2 mode=recreate
+CLIENT iteration=3 native=0xc253b80 id=42 reuse=3 mode=recreate
+CLIENT iteration=4 native=0xc253b80 id=52 reuse=4 mode=recreate
+CLIENT iteration=5 native=0xc253b80 id=62 reuse=5 mode=recreate
+CLIENT iteration=6 native=0xc253b80 id=72 reuse=6 mode=recreate
+CLIENT iteration=7 native=0xc253b80 id=82 reuse=7 mode=recreate
+CLIENT iteration=8 native=0xc253b80 id=92 reuse=8 mode=recreate
+CLIENT iteration=9 native=0xc253b80 id=98 reuse=9 mode=recreate
+CLIENT iteration=10 native=0xc253b80 id=104 reuse=10 mode=recreate
+CLIENT iteration=11 native=0xc253b80 id=110 reuse=11 mode=recreate
+CLIENT iteration=12 native=0xc253b80 id=116 reuse=12 mode=recreate
+CLIENT iteration=13 native=0xc253b80 id=122 reuse=13 mode=recreate
+CLIENT iteration=14 native=0xc253b80 id=128 reuse=14 mode=recreate
+CLIENT iteration=15 native=0xc253b80 id=134 reuse=15 mode=recreate
+CLIENT iteration=16 native=0xc253b80 id=140 reuse=16 mode=recreate
+CLIENT iteration=17 native=0xc253b80 id=146 reuse=17 mode=recreate
+CLIENT iteration=18 native=0xc253b80 id=152 reuse=18 mode=recreate
+CLIENT iteration=19 native=0xc253b80 id=158 reuse=19 mode=recreate
+CLIENT iteration=20 native=0xc253b80 id=164 reuse=20 mode=recreate
+CLIENT iteration=21 native=0xc253b80 id=170 reuse=21 mode=recreate
+CLIENT iteration=22 native=0xc253b80 id=176 reuse=22 mode=recreate
+CLIENT iteration=23 native=0xc253b80 id=182 reuse=23 mode=recreate
+CLIENT iteration=24 native=0xc253b80 id=188 reuse=24 mode=recreate
+CLIENT iteration=25 native=0xc253b80 id=194 reuse=25 mode=recreate
+CLIENT iteration=26 native=0xc253b80 id=200 reuse=26 mode=recreate
+CLIENT iteration=27 native=0xc253b80 id=206 reuse=27 mode=recreate
+CLIENT iteration=28 native=0xc253b80 id=212 reuse=28 mode=recreate
+CLIENT iteration=29 native=0xc253b80 id=218 reuse=29 mode=recreate
+CLIENT iteration=30 native=0xc253b80 id=224 reuse=30 mode=recreate
+CLIENT iteration=31 native=0xc253b80 id=230 reuse=31 mode=recreate
+CLIENT iteration=32 native=0xc253b80 id=236 reuse=32 mode=recreate
+CLIENT iteration=33 native=0xc253b80 id=242 reuse=33 mode=recreate
+CLIENT iteration=34 native=0xc253b80 id=248 reuse=34 mode=recreate
+CLIENT iteration=35 native=0xc253b80 id=254 reuse=35 mode=recreate
+CLIENT iteration=36 native=0xc253b80 id=260 reuse=36 mode=recreate
+CLIENT iteration=37 native=0xc253b80 id=266 reuse=37 mode=recreate
+CLIENT iteration=38 native=0xc253b80 id=272 reuse=38 mode=recreate
+CLIENT iteration=39 native=0xc253b80 id=278 reuse=39 mode=recreate
+CLIENT iteration=40 native=0xc253b80 id=284 reuse=40 mode=recreate
+CLIENT iteration=41 native=0xc253b80 id=290 reuse=41 mode=recreate
+CLIENT iteration=42 native=0xc253b80 id=296 reuse=42 mode=recreate
+CLIENT iteration=43 native=0xc253b80 id=302 reuse=43 mode=recreate
+CLIENT iteration=44 native=0xc253b80 id=308 reuse=44 mode=recreate
+CLIENT iteration=45 native=0xc253b80 id=314 reuse=45 mode=recreate
+CLIENT iteration=46 native=0xc253b80 id=320 reuse=46 mode=recreate
+CLIENT iteration=47 native=0xc253b80 id=326 reuse=47 mode=recreate
+CLIENT iteration=48 native=0xc253b80 id=332 reuse=48 mode=recreate
+CLIENT iteration=49 native=0xc253b80 id=338 reuse=49 mode=recreate
+CLIENT iteration=50 native=0xc253b80 id=344 reuse=50 mode=recreate
+CLIENT iteration=51 native=0xc253b80 id=350 reuse=51 mode=recreate
+CLIENT iteration=52 native=0xc253b80 id=356 reuse=52 mode=recreate
+CLIENT iteration=53 native=0xc253b80 id=362 reuse=53 mode=recreate
+CLIENT iteration=54 native=0xc253b80 id=368 reuse=54 mode=recreate
+CLIENT iteration=55 native=0xc253b80 id=374 reuse=55 mode=recreate
+CLIENT iteration=56 native=0xc253b80 id=380 reuse=56 mode=recreate
+CLIENT iteration=57 native=0xc253b80 id=386 reuse=57 mode=recreate
+CLIENT iteration=58 native=0xc253b80 id=392 reuse=58 mode=recreate
+CLIENT iteration=59 native=0xc253b80 id=398 reuse=59 mode=recreate
+CLIENT iteration=60 native=0xc253b80 id=404 reuse=60 mode=recreate
+CLIENT iteration=61 native=0xc253b80 id=410 reuse=61 mode=recreate
+CLIENT iteration=62 native=0xc253b80 id=416 reuse=62 mode=recreate
+CLIENT iteration=63 native=0xc253b80 id=422 reuse=63 mode=recreate
+CLIENT iteration=64 native=0xc253b80 id=428 reuse=64 mode=recreate
+CLIENT iteration=65 native=0xc253b80 id=434 reuse=65 mode=recreate
+CLIENT iteration=66 native=0xc253b80 id=440 reuse=66 mode=recreate
+CLIENT iteration=67 native=0xc253b80 id=446 reuse=67 mode=recreate
+CLIENT iteration=68 native=0xc253b80 id=452 reuse=68 mode=recreate
+CLIENT iteration=69 native=0xc253b80 id=458 reuse=69 mode=recreate
+CLIENT iteration=70 native=0xc253b80 id=464 reuse=70 mode=recreate
+CLIENT iteration=71 native=0xc253b80 id=470 reuse=71 mode=recreate
+CLIENT iteration=72 native=0xc255150 id=476 reuse=71 mode=recreate
+CLIENT iteration=73 native=0xc2551c0 id=482 reuse=71 mode=recreate
+CLIENT iteration=74 native=0xc2551c0 id=488 reuse=72 mode=recreate
+CLIENT iteration=75 native=0xc2551c0 id=494 reuse=73 mode=recreate
+CLIENT iteration=76 native=0xc2551c0 id=500 reuse=74 mode=recreate
+CLIENT iteration=77 native=0xc2551c0 id=506 reuse=75 mode=recreate
+CLIENT iteration=78 native=0xc2551c0 id=512 reuse=76 mode=recreate
+CLIENT iteration=79 native=0xc265150 id=518 reuse=76 mode=recreate
+CLIENT iteration=80 native=0xc29b080 id=524 reuse=76 mode=recreate
+CLIENT iteration=81 native=0xc29b080 id=530 reuse=77 mode=recreate
+CLIENT iteration=82 native=0xc29b080 id=536 reuse=78 mode=recreate
+CLIENT iteration=83 native=0xc29b080 id=542 reuse=79 mode=recreate
+CLIENT iteration=84 native=0xc29b080 id=548 reuse=80 mode=recreate
+CLIENT iteration=85 native=0xc29b080 id=554 reuse=81 mode=recreate
+CLIENT iteration=86 native=0xc29b080 id=560 reuse=82 mode=recreate
+CLIENT iteration=87 native=0xc329b50 id=566 reuse=82 mode=recreate
+CLIENT iteration=88 native=0xc38e570 id=572 reuse=82 mode=recreate
+CLIENT iteration=89 native=0xc38e570 id=578 reuse=83 mode=recreate
+CLIENT iteration=90 native=0xc38e570 id=584 reuse=84 mode=recreate
+CLIENT iteration=91 native=0xc38e570 id=590 reuse=85 mode=recreate
+CLIENT iteration=92 native=0xc38e570 id=596 reuse=86 mode=recreate
+CLIENT iteration=93 native=0xc38e570 id=602 reuse=87 mode=recreate
+CLIENT iteration=94 native=0xc38e570 id=608 reuse=88 mode=recreate
+CLIENT iteration=95 native=0xc3a0580 id=614 reuse=88 mode=recreate
+CLIENT iteration=96 native=0xc3a64d0 id=620 reuse=88 mode=recreate
+CLIENT iteration=97 native=0xc3a64d0 id=626 reuse=89 mode=recreate
+CLIENT iteration=98 native=0xc27dbe0 id=632 reuse=89 mode=recreate
+CLIENT iteration=99 native=0xc274af0 id=638 reuse=89 mode=recreate
+CLIENT iteration=100 native=0xc274af0 id=644 reuse=90 mode=recreate
+CLIENT iteration=101 native=0xc274af0 id=650 reuse=91 mode=recreate
+CLIENT iteration=102 native=0xc274af0 id=656 reuse=92 mode=recreate
+CLIENT iteration=103 native=0xc274270 id=662 reuse=92 mode=recreate
+CLIENT iteration=104 native=0xc254ec0 id=668 reuse=92 mode=recreate
+CLIENT iteration=105 native=0xc254ec0 id=674 reuse=93 mode=recreate
+CLIENT iteration=106 native=0xc3b7020 id=680 reuse=93 mode=recreate
+CLIENT iteration=107 native=0xc35fc70 id=686 reuse=93 mode=recreate
+CLIENT iteration=108 native=0xc35fc70 id=692 reuse=94 mode=recreate
+CLIENT iteration=109 native=0xc2c2e90 id=698 reuse=94 mode=recreate
+CLIENT iteration=110 native=0xc2c2e90 id=704 reuse=95 mode=recreate
+CLIENT iteration=111 native=0xc28f870 id=710 reuse=95 mode=recreate
+CLIENT iteration=112 native=0xc28f870 id=716 reuse=96 mode=recreate
+CLIENT iteration=113 native=0xc2c2d40 id=722 reuse=96 mode=recreate
+CLIENT iteration=114 native=0xc2ae220 id=728 reuse=96 mode=recreate
+CLIENT iteration=115 native=0xc36a660 id=734 reuse=96 mode=recreate
+CLIENT iteration=116 native=0xc36a660 id=740 reuse=97 mode=recreate
+CLIENT iteration=117 native=0xc36a660 id=746 reuse=98 mode=recreate
+CLIENT iteration=118 native=0xc2b4000 id=752 reuse=98 mode=recreate
+CLIENT iteration=119 native=0xc3b4b80 id=758 reuse=98 mode=recreate
+CLIENT iteration=120 native=0xc29a7a0 id=764 reuse=98 mode=recreate
+CLIENT iteration=121 native=0xc29a7a0 id=770 reuse=99 mode=recreate
+CLIENT iteration=122 native=0xc253b80 id=776 reuse=99 mode=recreate
+CLIENT iteration=123 native=0xc3ac2c0 id=782 reuse=99 mode=recreate
+CLIENT iteration=124 native=0xc3ac2c0 id=788 reuse=100 mode=recreate
+CLIENT iteration=125 native=0xc3ac2c0 id=794 reuse=101 mode=recreate
+CLIENT iteration=126 native=0xc3ac2c0 id=800 reuse=102 mode=recreate
+CLIENT iteration=127 native=0xc35f130 id=806 reuse=102 mode=recreate
+PASS mode=recreate commits=128 bad=0 pointer_reuses=102
+
+=== wayland rebind ===
+MESA: info: kbase: CSF driver, uAPI version 1.21, page_size=4096
+MESA: info: kbase: coherency mode 0 (ACE-Lite), shaderDeviceClock off (strict, PANVK_KBASE_STRICT_DEVICE_CLOCK=0 = 114), coherent pools off (PANVK_KBASE_COHERENT_POOLS=1 enables)
+MESA: info: kbase: timestamp calibration: CSF, keeping cntfrq 13000000 Hz (PANVK_KBASE_TS_CALIBRATE=1 = measure)
+MESA: info: panvk: gpu_id 0xc8700000 variant 0x4 arch v12 model Mali-G720 texture_features 0xc7fe001e 0 0 0
+MESA: info: panvk: BC emulation on, lowmem (native compressed mask 0xc7fe001e)
+WARNING: panvk is not a conformant Vulkan implementation, testing use only.
+MESA: info: kbase: CSF driver, uAPI version 1.21, page_size=4096
+MESA: info: kbase: coherency mode 0 (ACE-Lite), shaderDeviceClock off (strict, PANVK_KBASE_STRICT_DEVICE_CLOCK=0 = 114), coherent pools off (PANVK_KBASE_COHERENT_POOLS=1 enables)
+MESA: info: kbase: timestamp calibration: CSF, keeping cntfrq 13000000 Hz (PANVK_KBASE_TS_CALIBRATE=1 = measure)
+MESA: info: kbase: mem_alloc via ALLOC_EX
+MESA: info: kbase: queue_group_create layout=112 bytes, 3 CS, csi_handlers 0x1
+MESA: info: kbase: tiler heaps 4 initial / 400 max chunks of 1024 KiB
+MESA: info: kbase: tiler_heap_init layout=16 bytes
+MESA: info: kbase: CSF driver, uAPI version 1.21, page_size=4096
+MESA: info: kbase: coherency mode 0 (ACE-Lite), shaderDeviceClock off (strict, PANVK_KBASE_STRICT_DEVICE_CLOCK=0 = 114), coherent pools off (PANVK_KBASE_COHERENT_POOLS=1 enables)
+MESA: info: kbase: timestamp calibration: CSF, keeping cntfrq 13000000 Hz (PANVK_KBASE_TS_CALIBRATE=1 = measure)
+MESA: info: panvk: gpu_id 0xc8700000 variant 0x4 arch v12 model Mali-G720 texture_features 0xc7fe001e 0 0 0
+MESA: info: panvk: BC emulation on, lowmem (native compressed mask 0xc7fe001e)
+WARNING: panvk is not a conformant Vulkan implementation, testing use only.
+MESA: info: kbase: CSF driver, uAPI version 1.21, page_size=4096
+MESA: info: kbase: coherency mode 0 (ACE-Lite), shaderDeviceClock off (strict, PANVK_KBASE_STRICT_DEVICE_CLOCK=0 = 114), coherent pools off (PANVK_KBASE_COHERENT_POOLS=1 enables)
+MESA: info: kbase: timestamp calibration: CSF, keeping cntfrq 13000000 Hz (PANVK_KBASE_TS_CALIBRATE=1 = measure)
+MESA: info: kbase: mem_alloc via ALLOC_EX
+MESA: info: kbase: queue_group_create layout=112 bytes, 3 CS, csi_handlers 0x1
+MESA: info: kbase: tiler heaps 4 initial / 400 max chunks of 1024 KiB
+MESA: info: kbase: tiler_heap_init layout=16 bytes
+CLIENT iteration=0 native=0x407d9f0 id=6 reuse=0 mode=rebind
+GL_RENDERER=zink Vulkan 1.4(Mali-G720-Immortalis MC12 (MESA_PANVK))
+CLIENT iteration=1 native=0x407d9f0 id=6 reuse=1 mode=rebind
+CLIENT iteration=2 native=0x407d9f0 id=6 reuse=2 mode=rebind
+CLIENT iteration=3 native=0x407d9f0 id=6 reuse=3 mode=rebind
+CLIENT iteration=4 native=0x407d9f0 id=6 reuse=4 mode=rebind
+CLIENT iteration=5 native=0x407d9f0 id=6 reuse=5 mode=rebind
+CLIENT iteration=6 native=0x407d9f0 id=6 reuse=6 mode=rebind
+CLIENT iteration=7 native=0x407d9f0 id=6 reuse=7 mode=rebind
+CLIENT iteration=8 native=0x407d9f0 id=6 reuse=8 mode=rebind
+CLIENT iteration=9 native=0x407d9f0 id=6 reuse=9 mode=rebind
+CLIENT iteration=10 native=0x407d9f0 id=6 reuse=10 mode=rebind
+CLIENT iteration=11 native=0x407d9f0 id=6 reuse=11 mode=rebind
+CLIENT iteration=12 native=0x407d9f0 id=6 reuse=12 mode=rebind
+CLIENT iteration=13 native=0x407d9f0 id=6 reuse=13 mode=rebind
+CLIENT iteration=14 native=0x407d9f0 id=6 reuse=14 mode=rebind
+CLIENT iteration=15 native=0x407d9f0 id=6 reuse=15 mode=rebind
+CLIENT iteration=16 native=0x407d9f0 id=6 reuse=16 mode=rebind
+CLIENT iteration=17 native=0x407d9f0 id=6 reuse=17 mode=rebind
+CLIENT iteration=18 native=0x407d9f0 id=6 reuse=18 mode=rebind
+CLIENT iteration=19 native=0x407d9f0 id=6 reuse=19 mode=rebind
+CLIENT iteration=20 native=0x407d9f0 id=6 reuse=20 mode=rebind
+CLIENT iteration=21 native=0x407d9f0 id=6 reuse=21 mode=rebind
+CLIENT iteration=22 native=0x407d9f0 id=6 reuse=22 mode=rebind
+CLIENT iteration=23 native=0x407d9f0 id=6 reuse=23 mode=rebind
+CLIENT iteration=24 native=0x407d9f0 id=6 reuse=24 mode=rebind
+CLIENT iteration=25 native=0x407d9f0 id=6 reuse=25 mode=rebind
+CLIENT iteration=26 native=0x407d9f0 id=6 reuse=26 mode=rebind
+CLIENT iteration=27 native=0x407d9f0 id=6 reuse=27 mode=rebind
+CLIENT iteration=28 native=0x407d9f0 id=6 reuse=28 mode=rebind
+CLIENT iteration=29 native=0x407d9f0 id=6 reuse=29 mode=rebind
+CLIENT iteration=30 native=0x407d9f0 id=6 reuse=30 mode=rebind
+CLIENT iteration=31 native=0x407d9f0 id=6 reuse=31 mode=rebind
+CLIENT iteration=32 native=0x407d9f0 id=6 reuse=32 mode=rebind
+CLIENT iteration=33 native=0x407d9f0 id=6 reuse=33 mode=rebind
+CLIENT iteration=34 native=0x407d9f0 id=6 reuse=34 mode=rebind
+CLIENT iteration=35 native=0x407d9f0 id=6 reuse=35 mode=rebind
+CLIENT iteration=36 native=0x407d9f0 id=6 reuse=36 mode=rebind
+CLIENT iteration=37 native=0x407d9f0 id=6 reuse=37 mode=rebind
+CLIENT iteration=38 native=0x407d9f0 id=6 reuse=38 mode=rebind
+CLIENT iteration=39 native=0x407d9f0 id=6 reuse=39 mode=rebind
+CLIENT iteration=40 native=0x407d9f0 id=6 reuse=40 mode=rebind
+CLIENT iteration=41 native=0x407d9f0 id=6 reuse=41 mode=rebind
+CLIENT iteration=42 native=0x407d9f0 id=6 reuse=42 mode=rebind
+CLIENT iteration=43 native=0x407d9f0 id=6 reuse=43 mode=rebind
+CLIENT iteration=44 native=0x407d9f0 id=6 reuse=44 mode=rebind
+CLIENT iteration=45 native=0x407d9f0 id=6 reuse=45 mode=rebind
+CLIENT iteration=46 native=0x407d9f0 id=6 reuse=46 mode=rebind
+CLIENT iteration=47 native=0x407d9f0 id=6 reuse=47 mode=rebind
+CLIENT iteration=48 native=0x407d9f0 id=6 reuse=48 mode=rebind
+CLIENT iteration=49 native=0x407d9f0 id=6 reuse=49 mode=rebind
+CLIENT iteration=50 native=0x407d9f0 id=6 reuse=50 mode=rebind
+CLIENT iteration=51 native=0x407d9f0 id=6 reuse=51 mode=rebind
+CLIENT iteration=52 native=0x407d9f0 id=6 reuse=52 mode=rebind
+CLIENT iteration=53 native=0x407d9f0 id=6 reuse=53 mode=rebind
+CLIENT iteration=54 native=0x407d9f0 id=6 reuse=54 mode=rebind
+CLIENT iteration=55 native=0x407d9f0 id=6 reuse=55 mode=rebind
+CLIENT iteration=56 native=0x407d9f0 id=6 reuse=56 mode=rebind
+CLIENT iteration=57 native=0x407d9f0 id=6 reuse=57 mode=rebind
+CLIENT iteration=58 native=0x407d9f0 id=6 reuse=58 mode=rebind
+CLIENT iteration=59 native=0x407d9f0 id=6 reuse=59 mode=rebind
+CLIENT iteration=60 native=0x407d9f0 id=6 reuse=60 mode=rebind
+CLIENT iteration=61 native=0x407d9f0 id=6 reuse=61 mode=rebind
+CLIENT iteration=62 native=0x407d9f0 id=6 reuse=62 mode=rebind
+CLIENT iteration=63 native=0x407d9f0 id=6 reuse=63 mode=rebind
+CLIENT iteration=64 native=0x407d9f0 id=6 reuse=64 mode=rebind
+CLIENT iteration=65 native=0x407d9f0 id=6 reuse=65 mode=rebind
+CLIENT iteration=66 native=0x407d9f0 id=6 reuse=66 mode=rebind
+CLIENT iteration=67 native=0x407d9f0 id=6 reuse=67 mode=rebind
+CLIENT iteration=68 native=0x407d9f0 id=6 reuse=68 mode=rebind
+CLIENT iteration=69 native=0x407d9f0 id=6 reuse=69 mode=rebind
+CLIENT iteration=70 native=0x407d9f0 id=6 reuse=70 mode=rebind
+CLIENT iteration=71 native=0x407d9f0 id=6 reuse=71 mode=rebind
+CLIENT iteration=72 native=0x407d9f0 id=6 reuse=72 mode=rebind
+CLIENT iteration=73 native=0x407d9f0 id=6 reuse=73 mode=rebind
+CLIENT iteration=74 native=0x407d9f0 id=6 reuse=74 mode=rebind
+CLIENT iteration=75 native=0x407d9f0 id=6 reuse=75 mode=rebind
+CLIENT iteration=76 native=0x407d9f0 id=6 reuse=76 mode=rebind
+CLIENT iteration=77 native=0x407d9f0 id=6 reuse=77 mode=rebind
+CLIENT iteration=78 native=0x407d9f0 id=6 reuse=78 mode=rebind
+CLIENT iteration=79 native=0x407d9f0 id=6 reuse=79 mode=rebind
+CLIENT iteration=80 native=0x407d9f0 id=6 reuse=80 mode=rebind
+CLIENT iteration=81 native=0x407d9f0 id=6 reuse=81 mode=rebind
+CLIENT iteration=82 native=0x407d9f0 id=6 reuse=82 mode=rebind
+CLIENT iteration=83 native=0x407d9f0 id=6 reuse=83 mode=rebind
+CLIENT iteration=84 native=0x407d9f0 id=6 reuse=84 mode=rebind
+CLIENT iteration=85 native=0x407d9f0 id=6 reuse=85 mode=rebind
+CLIENT iteration=86 native=0x407d9f0 id=6 reuse=86 mode=rebind
+CLIENT iteration=87 native=0x407d9f0 id=6 reuse=87 mode=rebind
+CLIENT iteration=88 native=0x407d9f0 id=6 reuse=88 mode=rebind
+CLIENT iteration=89 native=0x407d9f0 id=6 reuse=89 mode=rebind
+CLIENT iteration=90 native=0x407d9f0 id=6 reuse=90 mode=rebind
+CLIENT iteration=91 native=0x407d9f0 id=6 reuse=91 mode=rebind
+CLIENT iteration=92 native=0x407d9f0 id=6 reuse=92 mode=rebind
+CLIENT iteration=93 native=0x407d9f0 id=6 reuse=93 mode=rebind
+CLIENT iteration=94 native=0x407d9f0 id=6 reuse=94 mode=rebind
+CLIENT iteration=95 native=0x407d9f0 id=6 reuse=95 mode=rebind
+CLIENT iteration=96 native=0x407d9f0 id=6 reuse=96 mode=rebind
+CLIENT iteration=97 native=0x407d9f0 id=6 reuse=97 mode=rebind
+CLIENT iteration=98 native=0x407d9f0 id=6 reuse=98 mode=rebind
+CLIENT iteration=99 native=0x407d9f0 id=6 reuse=99 mode=rebind
+CLIENT iteration=100 native=0x407d9f0 id=6 reuse=100 mode=rebind
+CLIENT iteration=101 native=0x407d9f0 id=6 reuse=101 mode=rebind
+CLIENT iteration=102 native=0x407d9f0 id=6 reuse=102 mode=rebind
+CLIENT iteration=103 native=0x407d9f0 id=6 reuse=103 mode=rebind
+CLIENT iteration=104 native=0x407d9f0 id=6 reuse=104 mode=rebind
+CLIENT iteration=105 native=0x407d9f0 id=6 reuse=105 mode=rebind
+CLIENT iteration=106 native=0x407d9f0 id=6 reuse=106 mode=rebind
+CLIENT iteration=107 native=0x407d9f0 id=6 reuse=107 mode=rebind
+CLIENT iteration=108 native=0x407d9f0 id=6 reuse=108 mode=rebind
+CLIENT iteration=109 native=0x407d9f0 id=6 reuse=109 mode=rebind
+CLIENT iteration=110 native=0x407d9f0 id=6 reuse=110 mode=rebind
+CLIENT iteration=111 native=0x407d9f0 id=6 reuse=111 mode=rebind
+CLIENT iteration=112 native=0x407d9f0 id=6 reuse=112 mode=rebind
+CLIENT iteration=113 native=0x407d9f0 id=6 reuse=113 mode=rebind
+CLIENT iteration=114 native=0x407d9f0 id=6 reuse=114 mode=rebind
+CLIENT iteration=115 native=0x407d9f0 id=6 reuse=115 mode=rebind
+CLIENT iteration=116 native=0x407d9f0 id=6 reuse=116 mode=rebind
+CLIENT iteration=117 native=0x407d9f0 id=6 reuse=117 mode=rebind
+CLIENT iteration=118 native=0x407d9f0 id=6 reuse=118 mode=rebind
+CLIENT iteration=119 native=0x407d9f0 id=6 reuse=119 mode=rebind
+CLIENT iteration=120 native=0x407d9f0 id=6 reuse=120 mode=rebind
+CLIENT iteration=121 native=0x407d9f0 id=6 reuse=121 mode=rebind
+CLIENT iteration=122 native=0x407d9f0 id=6 reuse=122 mode=rebind
+CLIENT iteration=123 native=0x407d9f0 id=6 reuse=123 mode=rebind
+CLIENT iteration=124 native=0x407d9f0 id=6 reuse=124 mode=rebind
+CLIENT iteration=125 native=0x407d9f0 id=6 reuse=125 mode=rebind
+CLIENT iteration=126 native=0x407d9f0 id=6 reuse=126 mode=rebind
+CLIENT iteration=127 native=0x407d9f0 id=6 reuse=127 mode=rebind
+PASS mode=rebind commits=128 bad=0 pointer_reuses=127
+
+=== wayland make-current ===
+MESA: info: kbase: CSF driver, uAPI version 1.21, page_size=4096
+MESA: info: kbase: coherency mode 0 (ACE-Lite), shaderDeviceClock off (strict, PANVK_KBASE_STRICT_DEVICE_CLOCK=0 = 114), coherent pools off (PANVK_KBASE_COHERENT_POOLS=1 enables)
+MESA: info: kbase: timestamp calibration: CSF, keeping cntfrq 13000000 Hz (PANVK_KBASE_TS_CALIBRATE=1 = measure)
+MESA: info: panvk: gpu_id 0xc8700000 variant 0x4 arch v12 model Mali-G720 texture_features 0xc7fe001e 0 0 0
+MESA: info: panvk: BC emulation on, lowmem (native compressed mask 0xc7fe001e)
+WARNING: panvk is not a conformant Vulkan implementation, testing use only.
+MESA: info: kbase: CSF driver, uAPI version 1.21, page_size=4096
+MESA: info: kbase: coherency mode 0 (ACE-Lite), shaderDeviceClock off (strict, PANVK_KBASE_STRICT_DEVICE_CLOCK=0 = 114), coherent pools off (PANVK_KBASE_COHERENT_POOLS=1 enables)
+MESA: info: kbase: timestamp calibration: CSF, keeping cntfrq 13000000 Hz (PANVK_KBASE_TS_CALIBRATE=1 = measure)
+MESA: info: kbase: mem_alloc via ALLOC_EX
+MESA: info: kbase: queue_group_create layout=112 bytes, 3 CS, csi_handlers 0x1
+MESA: info: kbase: tiler heaps 4 initial / 400 max chunks of 1024 KiB
+MESA: info: kbase: tiler_heap_init layout=16 bytes
+MESA: info: kbase: CSF driver, uAPI version 1.21, page_size=4096
+MESA: info: kbase: coherency mode 0 (ACE-Lite), shaderDeviceClock off (strict, PANVK_KBASE_STRICT_DEVICE_CLOCK=0 = 114), coherent pools off (PANVK_KBASE_COHERENT_POOLS=1 enables)
+MESA: info: kbase: timestamp calibration: CSF, keeping cntfrq 13000000 Hz (PANVK_KBASE_TS_CALIBRATE=1 = measure)
+MESA: info: panvk: gpu_id 0xc8700000 variant 0x4 arch v12 model Mali-G720 texture_features 0xc7fe001e 0 0 0
+MESA: info: panvk: BC emulation on, lowmem (native compressed mask 0xc7fe001e)
+WARNING: panvk is not a conformant Vulkan implementation, testing use only.
+MESA: info: kbase: CSF driver, uAPI version 1.21, page_size=4096
+MESA: info: kbase: coherency mode 0 (ACE-Lite), shaderDeviceClock off (strict, PANVK_KBASE_STRICT_DEVICE_CLOCK=0 = 114), coherent pools off (PANVK_KBASE_COHERENT_POOLS=1 enables)
+MESA: info: kbase: timestamp calibration: CSF, keeping cntfrq 13000000 Hz (PANVK_KBASE_TS_CALIBRATE=1 = measure)
+MESA: info: kbase: mem_alloc via ALLOC_EX
+MESA: info: kbase: queue_group_create layout=112 bytes, 3 CS, csi_handlers 0x1
+MESA: info: kbase: tiler heaps 4 initial / 400 max chunks of 1024 KiB
+MESA: info: kbase: tiler_heap_init layout=16 bytes
+CLIENT iteration=0 native=0x29fbdb0 id=6 reuse=0 mode=make-current
+GL_RENDERER=zink Vulkan 1.4(Mali-G720-Immortalis MC12 (MESA_PANVK))
+CLIENT iteration=1 native=0x29fbdb0 id=6 reuse=1 mode=make-current
+CLIENT iteration=2 native=0x29fbdb0 id=6 reuse=2 mode=make-current
+CLIENT iteration=3 native=0x29fbdb0 id=6 reuse=3 mode=make-current
+CLIENT iteration=4 native=0x29fbdb0 id=6 reuse=4 mode=make-current
+CLIENT iteration=5 native=0x29fbdb0 id=6 reuse=5 mode=make-current
+CLIENT iteration=6 native=0x29fbdb0 id=6 reuse=6 mode=make-current
+CLIENT iteration=7 native=0x29fbdb0 id=6 reuse=7 mode=make-current
+CLIENT iteration=8 native=0x29fbdb0 id=6 reuse=8 mode=make-current
+CLIENT iteration=9 native=0x29fbdb0 id=6 reuse=9 mode=make-current
+CLIENT iteration=10 native=0x29fbdb0 id=6 reuse=10 mode=make-current
+CLIENT iteration=11 native=0x29fbdb0 id=6 reuse=11 mode=make-current
+CLIENT iteration=12 native=0x29fbdb0 id=6 reuse=12 mode=make-current
+CLIENT iteration=13 native=0x29fbdb0 id=6 reuse=13 mode=make-current
+CLIENT iteration=14 native=0x29fbdb0 id=6 reuse=14 mode=make-current
+CLIENT iteration=15 native=0x29fbdb0 id=6 reuse=15 mode=make-current
+CLIENT iteration=16 native=0x29fbdb0 id=6 reuse=16 mode=make-current
+CLIENT iteration=17 native=0x29fbdb0 id=6 reuse=17 mode=make-current
+CLIENT iteration=18 native=0x29fbdb0 id=6 reuse=18 mode=make-current
+CLIENT iteration=19 native=0x29fbdb0 id=6 reuse=19 mode=make-current
+CLIENT iteration=20 native=0x29fbdb0 id=6 reuse=20 mode=make-current
+CLIENT iteration=21 native=0x29fbdb0 id=6 reuse=21 mode=make-current
+CLIENT iteration=22 native=0x29fbdb0 id=6 reuse=22 mode=make-current
+CLIENT iteration=23 native=0x29fbdb0 id=6 reuse=23 mode=make-current
+CLIENT iteration=24 native=0x29fbdb0 id=6 reuse=24 mode=make-current
+CLIENT iteration=25 native=0x29fbdb0 id=6 reuse=25 mode=make-current
+CLIENT iteration=26 native=0x29fbdb0 id=6 reuse=26 mode=make-current
+CLIENT iteration=27 native=0x29fbdb0 id=6 reuse=27 mode=make-current
+CLIENT iteration=28 native=0x29fbdb0 id=6 reuse=28 mode=make-current
+CLIENT iteration=29 native=0x29fbdb0 id=6 reuse=29 mode=make-current
+CLIENT iteration=30 native=0x29fbdb0 id=6 reuse=30 mode=make-current
+CLIENT iteration=31 native=0x29fbdb0 id=6 reuse=31 mode=make-current
+CLIENT iteration=32 native=0x29fbdb0 id=6 reuse=32 mode=make-current
+CLIENT iteration=33 native=0x29fbdb0 id=6 reuse=33 mode=make-current
+CLIENT iteration=34 native=0x29fbdb0 id=6 reuse=34 mode=make-current
+CLIENT iteration=35 native=0x29fbdb0 id=6 reuse=35 mode=make-current
+CLIENT iteration=36 native=0x29fbdb0 id=6 reuse=36 mode=make-current
+CLIENT iteration=37 native=0x29fbdb0 id=6 reuse=37 mode=make-current
+CLIENT iteration=38 native=0x29fbdb0 id=6 reuse=38 mode=make-current
+CLIENT iteration=39 native=0x29fbdb0 id=6 reuse=39 mode=make-current
+CLIENT iteration=40 native=0x29fbdb0 id=6 reuse=40 mode=make-current
+CLIENT iteration=41 native=0x29fbdb0 id=6 reuse=41 mode=make-current
+CLIENT iteration=42 native=0x29fbdb0 id=6 reuse=42 mode=make-current
+CLIENT iteration=43 native=0x29fbdb0 id=6 reuse=43 mode=make-current
+CLIENT iteration=44 native=0x29fbdb0 id=6 reuse=44 mode=make-current
+CLIENT iteration=45 native=0x29fbdb0 id=6 reuse=45 mode=make-current
+CLIENT iteration=46 native=0x29fbdb0 id=6 reuse=46 mode=make-current
+CLIENT iteration=47 native=0x29fbdb0 id=6 reuse=47 mode=make-current
+CLIENT iteration=48 native=0x29fbdb0 id=6 reuse=48 mode=make-current
+CLIENT iteration=49 native=0x29fbdb0 id=6 reuse=49 mode=make-current
+CLIENT iteration=50 native=0x29fbdb0 id=6 reuse=50 mode=make-current
+CLIENT iteration=51 native=0x29fbdb0 id=6 reuse=51 mode=make-current
+CLIENT iteration=52 native=0x29fbdb0 id=6 reuse=52 mode=make-current
+CLIENT iteration=53 native=0x29fbdb0 id=6 reuse=53 mode=make-current
+CLIENT iteration=54 native=0x29fbdb0 id=6 reuse=54 mode=make-current
+CLIENT iteration=55 native=0x29fbdb0 id=6 reuse=55 mode=make-current
+CLIENT iteration=56 native=0x29fbdb0 id=6 reuse=56 mode=make-current
+CLIENT iteration=57 native=0x29fbdb0 id=6 reuse=57 mode=make-current
+CLIENT iteration=58 native=0x29fbdb0 id=6 reuse=58 mode=make-current
+CLIENT iteration=59 native=0x29fbdb0 id=6 reuse=59 mode=make-current
+CLIENT iteration=60 native=0x29fbdb0 id=6 reuse=60 mode=make-current
+CLIENT iteration=61 native=0x29fbdb0 id=6 reuse=61 mode=make-current
+CLIENT iteration=62 native=0x29fbdb0 id=6 reuse=62 mode=make-current
+CLIENT iteration=63 native=0x29fbdb0 id=6 reuse=63 mode=make-current
+CLIENT iteration=64 native=0x29fbdb0 id=6 reuse=64 mode=make-current
+CLIENT iteration=65 native=0x29fbdb0 id=6 reuse=65 mode=make-current
+CLIENT iteration=66 native=0x29fbdb0 id=6 reuse=66 mode=make-current
+CLIENT iteration=67 native=0x29fbdb0 id=6 reuse=67 mode=make-current
+CLIENT iteration=68 native=0x29fbdb0 id=6 reuse=68 mode=make-current
+CLIENT iteration=69 native=0x29fbdb0 id=6 reuse=69 mode=make-current
+CLIENT iteration=70 native=0x29fbdb0 id=6 reuse=70 mode=make-current
+CLIENT iteration=71 native=0x29fbdb0 id=6 reuse=71 mode=make-current
+CLIENT iteration=72 native=0x29fbdb0 id=6 reuse=72 mode=make-current
+CLIENT iteration=73 native=0x29fbdb0 id=6 reuse=73 mode=make-current
+CLIENT iteration=74 native=0x29fbdb0 id=6 reuse=74 mode=make-current
+CLIENT iteration=75 native=0x29fbdb0 id=6 reuse=75 mode=make-current
+CLIENT iteration=76 native=0x29fbdb0 id=6 reuse=76 mode=make-current
+CLIENT iteration=77 native=0x29fbdb0 id=6 reuse=77 mode=make-current
+CLIENT iteration=78 native=0x29fbdb0 id=6 reuse=78 mode=make-current
+CLIENT iteration=79 native=0x29fbdb0 id=6 reuse=79 mode=make-current
+CLIENT iteration=80 native=0x29fbdb0 id=6 reuse=80 mode=make-current
+CLIENT iteration=81 native=0x29fbdb0 id=6 reuse=81 mode=make-current
+CLIENT iteration=82 native=0x29fbdb0 id=6 reuse=82 mode=make-current
+CLIENT iteration=83 native=0x29fbdb0 id=6 reuse=83 mode=make-current
+CLIENT iteration=84 native=0x29fbdb0 id=6 reuse=84 mode=make-current
+CLIENT iteration=85 native=0x29fbdb0 id=6 reuse=85 mode=make-current
+CLIENT iteration=86 native=0x29fbdb0 id=6 reuse=86 mode=make-current
+CLIENT iteration=87 native=0x29fbdb0 id=6 reuse=87 mode=make-current
+CLIENT iteration=88 native=0x29fbdb0 id=6 reuse=88 mode=make-current
+CLIENT iteration=89 native=0x29fbdb0 id=6 reuse=89 mode=make-current
+CLIENT iteration=90 native=0x29fbdb0 id=6 reuse=90 mode=make-current
+CLIENT iteration=91 native=0x29fbdb0 id=6 reuse=91 mode=make-current
+CLIENT iteration=92 native=0x29fbdb0 id=6 reuse=92 mode=make-current
+CLIENT iteration=93 native=0x29fbdb0 id=6 reuse=93 mode=make-current
+CLIENT iteration=94 native=0x29fbdb0 id=6 reuse=94 mode=make-current
+CLIENT iteration=95 native=0x29fbdb0 id=6 reuse=95 mode=make-current
+CLIENT iteration=96 native=0x29fbdb0 id=6 reuse=96 mode=make-current
+CLIENT iteration=97 native=0x29fbdb0 id=6 reuse=97 mode=make-current
+CLIENT iteration=98 native=0x29fbdb0 id=6 reuse=98 mode=make-current
+CLIENT iteration=99 native=0x29fbdb0 id=6 reuse=99 mode=make-current
+CLIENT iteration=100 native=0x29fbdb0 id=6 reuse=100 mode=make-current
+CLIENT iteration=101 native=0x29fbdb0 id=6 reuse=101 mode=make-current
+CLIENT iteration=102 native=0x29fbdb0 id=6 reuse=102 mode=make-current
+CLIENT iteration=103 native=0x29fbdb0 id=6 reuse=103 mode=make-current
+CLIENT iteration=104 native=0x29fbdb0 id=6 reuse=104 mode=make-current
+CLIENT iteration=105 native=0x29fbdb0 id=6 reuse=105 mode=make-current
+CLIENT iteration=106 native=0x29fbdb0 id=6 reuse=106 mode=make-current
+CLIENT iteration=107 native=0x29fbdb0 id=6 reuse=107 mode=make-current
+CLIENT iteration=108 native=0x29fbdb0 id=6 reuse=108 mode=make-current
+CLIENT iteration=109 native=0x29fbdb0 id=6 reuse=109 mode=make-current
+CLIENT iteration=110 native=0x29fbdb0 id=6 reuse=110 mode=make-current
+CLIENT iteration=111 native=0x29fbdb0 id=6 reuse=111 mode=make-current
+CLIENT iteration=112 native=0x29fbdb0 id=6 reuse=112 mode=make-current
+CLIENT iteration=113 native=0x29fbdb0 id=6 reuse=113 mode=make-current
+CLIENT iteration=114 native=0x29fbdb0 id=6 reuse=114 mode=make-current
+CLIENT iteration=115 native=0x29fbdb0 id=6 reuse=115 mode=make-current
+CLIENT iteration=116 native=0x29fbdb0 id=6 reuse=116 mode=make-current
+CLIENT iteration=117 native=0x29fbdb0 id=6 reuse=117 mode=make-current
+CLIENT iteration=118 native=0x29fbdb0 id=6 reuse=118 mode=make-current
+CLIENT iteration=119 native=0x29fbdb0 id=6 reuse=119 mode=make-current
+CLIENT iteration=120 native=0x29fbdb0 id=6 reuse=120 mode=make-current
+CLIENT iteration=121 native=0x29fbdb0 id=6 reuse=121 mode=make-current
+CLIENT iteration=122 native=0x29fbdb0 id=6 reuse=122 mode=make-current
+CLIENT iteration=123 native=0x29fbdb0 id=6 reuse=123 mode=make-current
+CLIENT iteration=124 native=0x29fbdb0 id=6 reuse=124 mode=make-current
+CLIENT iteration=125 native=0x29fbdb0 id=6 reuse=125 mode=make-current
+CLIENT iteration=126 native=0x29fbdb0 id=6 reuse=126 mode=make-current
+CLIENT iteration=127 native=0x29fbdb0 id=6 reuse=127 mode=make-current
+PASS mode=make-current commits=128 bad=0 pointer_reuses=127
+
+=== wayland destroy-current ===
+MESA: info: kbase: CSF driver, uAPI version 1.21, page_size=4096
+MESA: info: kbase: coherency mode 0 (ACE-Lite), shaderDeviceClock off (strict, PANVK_KBASE_STRICT_DEVICE_CLOCK=0 = 114), coherent pools off (PANVK_KBASE_COHERENT_POOLS=1 enables)
+MESA: info: kbase: timestamp calibration: CSF, keeping cntfrq 13000000 Hz (PANVK_KBASE_TS_CALIBRATE=1 = measure)
+MESA: info: panvk: gpu_id 0xc8700000 variant 0x4 arch v12 model Mali-G720 texture_features 0xc7fe001e 0 0 0
+MESA: info: panvk: BC emulation on, lowmem (native compressed mask 0xc7fe001e)
+WARNING: panvk is not a conformant Vulkan implementation, testing use only.
+MESA: info: kbase: CSF driver, uAPI version 1.21, page_size=4096
+MESA: info: kbase: coherency mode 0 (ACE-Lite), shaderDeviceClock off (strict, PANVK_KBASE_STRICT_DEVICE_CLOCK=0 = 114), coherent pools off (PANVK_KBASE_COHERENT_POOLS=1 enables)
+MESA: info: kbase: timestamp calibration: CSF, keeping cntfrq 13000000 Hz (PANVK_KBASE_TS_CALIBRATE=1 = measure)
+MESA: info: kbase: mem_alloc via ALLOC_EX
+MESA: info: kbase: queue_group_create layout=112 bytes, 3 CS, csi_handlers 0x1
+MESA: info: kbase: tiler heaps 4 initial / 400 max chunks of 1024 KiB
+MESA: info: kbase: tiler_heap_init layout=16 bytes
+MESA: info: kbase: CSF driver, uAPI version 1.21, page_size=4096
+MESA: info: kbase: coherency mode 0 (ACE-Lite), shaderDeviceClock off (strict, PANVK_KBASE_STRICT_DEVICE_CLOCK=0 = 114), coherent pools off (PANVK_KBASE_COHERENT_POOLS=1 enables)
+MESA: info: kbase: timestamp calibration: CSF, keeping cntfrq 13000000 Hz (PANVK_KBASE_TS_CALIBRATE=1 = measure)
+MESA: info: panvk: gpu_id 0xc8700000 variant 0x4 arch v12 model Mali-G720 texture_features 0xc7fe001e 0 0 0
+MESA: info: panvk: BC emulation on, lowmem (native compressed mask 0xc7fe001e)
+WARNING: panvk is not a conformant Vulkan implementation, testing use only.
+MESA: info: kbase: CSF driver, uAPI version 1.21, page_size=4096
+MESA: info: kbase: coherency mode 0 (ACE-Lite), shaderDeviceClock off (strict, PANVK_KBASE_STRICT_DEVICE_CLOCK=0 = 114), coherent pools off (PANVK_KBASE_COHERENT_POOLS=1 enables)
+MESA: info: kbase: timestamp calibration: CSF, keeping cntfrq 13000000 Hz (PANVK_KBASE_TS_CALIBRATE=1 = measure)
+MESA: info: kbase: mem_alloc via ALLOC_EX
+MESA: info: kbase: queue_group_create layout=112 bytes, 3 CS, csi_handlers 0x1
+MESA: info: kbase: tiler heaps 4 initial / 400 max chunks of 1024 KiB
+MESA: info: kbase: tiler_heap_init layout=16 bytes
+CLIENT iteration=0 native=0x279f2d40 id=6 reuse=0 mode=destroy-current
+GL_RENDERER=zink Vulkan 1.4(Mali-G720-Immortalis MC12 (MESA_PANVK))
+CLIENT iteration=1 native=0x279f2d40 id=22 reuse=1 mode=destroy-current
+CLIENT iteration=2 native=0x279f2d40 id=32 reuse=2 mode=destroy-current
+CLIENT iteration=3 native=0x279f2d40 id=42 reuse=3 mode=destroy-current
+CLIENT iteration=4 native=0x279f2d40 id=52 reuse=4 mode=destroy-current
+CLIENT iteration=5 native=0x279f2d40 id=62 reuse=5 mode=destroy-current
+CLIENT iteration=6 native=0x279f2d40 id=72 reuse=6 mode=destroy-current
+CLIENT iteration=7 native=0x279f2d40 id=82 reuse=7 mode=destroy-current
+CLIENT iteration=8 native=0x279f2d40 id=92 reuse=8 mode=destroy-current
+CLIENT iteration=9 native=0x279f2d40 id=98 reuse=9 mode=destroy-current
+CLIENT iteration=10 native=0x279f2d40 id=104 reuse=10 mode=destroy-current
+CLIENT iteration=11 native=0x279f2d40 id=110 reuse=11 mode=destroy-current
+CLIENT iteration=12 native=0x279f2d40 id=116 reuse=12 mode=destroy-current
+CLIENT iteration=13 native=0x279f2d40 id=122 reuse=13 mode=destroy-current
+CLIENT iteration=14 native=0x279f2d40 id=128 reuse=14 mode=destroy-current
+CLIENT iteration=15 native=0x279f2d40 id=134 reuse=15 mode=destroy-current
+CLIENT iteration=16 native=0x279f2d40 id=140 reuse=16 mode=destroy-current
+CLIENT iteration=17 native=0x279f2d40 id=146 reuse=17 mode=destroy-current
+CLIENT iteration=18 native=0x279f2d40 id=152 reuse=18 mode=destroy-current
+CLIENT iteration=19 native=0x279f2d40 id=158 reuse=19 mode=destroy-current
+CLIENT iteration=20 native=0x279f2d40 id=164 reuse=20 mode=destroy-current
+CLIENT iteration=21 native=0x279f2d40 id=170 reuse=21 mode=destroy-current
+CLIENT iteration=22 native=0x279f2d40 id=176 reuse=22 mode=destroy-current
+CLIENT iteration=23 native=0x279f2d40 id=182 reuse=23 mode=destroy-current
+CLIENT iteration=24 native=0x279f2d40 id=188 reuse=24 mode=destroy-current
+CLIENT iteration=25 native=0x279f2d40 id=194 reuse=25 mode=destroy-current
+CLIENT iteration=26 native=0x279f2d40 id=200 reuse=26 mode=destroy-current
+CLIENT iteration=27 native=0x279f2d40 id=206 reuse=27 mode=destroy-current
+CLIENT iteration=28 native=0x279f2d40 id=212 reuse=28 mode=destroy-current
+CLIENT iteration=29 native=0x279f2d40 id=218 reuse=29 mode=destroy-current
+CLIENT iteration=30 native=0x279f2d40 id=228 reuse=30 mode=destroy-current
+CLIENT iteration=31 native=0x279f2d40 id=230 reuse=31 mode=destroy-current
+CLIENT iteration=32 native=0x279f2d40 id=236 reuse=32 mode=destroy-current
+CLIENT iteration=33 native=0x279f2d40 id=242 reuse=33 mode=destroy-current
+CLIENT iteration=34 native=0x279f2d40 id=248 reuse=34 mode=destroy-current
+CLIENT iteration=35 native=0x279f2d40 id=254 reuse=35 mode=destroy-current
+CLIENT iteration=36 native=0x279f2d40 id=260 reuse=36 mode=destroy-current
+CLIENT iteration=37 native=0x279f2d40 id=266 reuse=37 mode=destroy-current
+CLIENT iteration=38 native=0x279f2d40 id=276 reuse=38 mode=destroy-current
+CLIENT iteration=39 native=0x279f2d40 id=278 reuse=39 mode=destroy-current
+CLIENT iteration=40 native=0x279f2d40 id=284 reuse=40 mode=destroy-current
+CLIENT iteration=41 native=0x279f2d40 id=290 reuse=41 mode=destroy-current
+CLIENT iteration=42 native=0x279f2d40 id=296 reuse=42 mode=destroy-current
+CLIENT iteration=43 native=0x279f4380 id=306 reuse=42 mode=destroy-current
+CLIENT iteration=44 native=0x279f4380 id=308 reuse=43 mode=destroy-current
+CLIENT iteration=45 native=0x279f4380 id=314 reuse=44 mode=destroy-current
+CLIENT iteration=46 native=0x27a3a240 id=320 reuse=44 mode=destroy-current
+CLIENT iteration=47 native=0x27a3a240 id=326 reuse=45 mode=destroy-current
+CLIENT iteration=48 native=0x27a39a80 id=332 reuse=45 mode=destroy-current
+CLIENT iteration=49 native=0x27a39a80 id=338 reuse=46 mode=destroy-current
+CLIENT iteration=50 native=0x27a39a80 id=344 reuse=47 mode=destroy-current
+CLIENT iteration=51 native=0x27a39a80 id=350 reuse=48 mode=destroy-current
+CLIENT iteration=52 native=0x27a39a80 id=356 reuse=49 mode=destroy-current
+CLIENT iteration=53 native=0x27a39a80 id=362 reuse=50 mode=destroy-current
+CLIENT iteration=54 native=0x27a39a80 id=368 reuse=51 mode=destroy-current
+CLIENT iteration=55 native=0x27a39a80 id=374 reuse=52 mode=destroy-current
+CLIENT iteration=56 native=0x27b47150 id=380 reuse=52 mode=destroy-current
+CLIENT iteration=57 native=0x27a22a20 id=386 reuse=52 mode=destroy-current
+CLIENT iteration=58 native=0x27a22a20 id=392 reuse=53 mode=destroy-current
+CLIENT iteration=59 native=0x27a24930 id=398 reuse=53 mode=destroy-current
+CLIENT iteration=60 native=0x27a24930 id=404 reuse=54 mode=destroy-current
+CLIENT iteration=61 native=0x27a24930 id=410 reuse=55 mode=destroy-current
+CLIENT iteration=62 native=0x27b55780 id=420 reuse=55 mode=destroy-current
+CLIENT iteration=63 native=0x27b55780 id=422 reuse=56 mode=destroy-current
+CLIENT iteration=64 native=0x27a9d2e0 id=432 reuse=56 mode=destroy-current
+CLIENT iteration=65 native=0x27a9d2e0 id=434 reuse=57 mode=destroy-current
+CLIENT iteration=66 native=0x27a9d2e0 id=440 reuse=58 mode=destroy-current
+CLIENT iteration=67 native=0x27aa4420 id=446 reuse=58 mode=destroy-current
+CLIENT iteration=68 native=0x27aa4420 id=452 reuse=59 mode=destroy-current
+CLIENT iteration=69 native=0x27aa4420 id=458 reuse=60 mode=destroy-current
+CLIENT iteration=70 native=0x27b0a390 id=464 reuse=60 mode=destroy-current
+CLIENT iteration=71 native=0x27b0a390 id=470 reuse=61 mode=destroy-current
+CLIENT iteration=72 native=0x27a6dae0 id=476 reuse=61 mode=destroy-current
+CLIENT iteration=73 native=0x27a6dae0 id=482 reuse=62 mode=destroy-current
+CLIENT iteration=74 native=0x27a6dae0 id=488 reuse=63 mode=destroy-current
+CLIENT iteration=75 native=0x27b3a7d0 id=494 reuse=63 mode=destroy-current
+CLIENT iteration=76 native=0x27b3a7d0 id=500 reuse=64 mode=destroy-current
+CLIENT iteration=77 native=0x27b3a7d0 id=506 reuse=65 mode=destroy-current
+CLIENT iteration=78 native=0x27b3a7d0 id=512 reuse=66 mode=destroy-current
+CLIENT iteration=79 native=0x27b3a7d0 id=518 reuse=67 mode=destroy-current
+CLIENT iteration=80 native=0x27a1cec0 id=524 reuse=67 mode=destroy-current
+CLIENT iteration=81 native=0x27afe060 id=530 reuse=67 mode=destroy-current
+CLIENT iteration=82 native=0x27afe060 id=536 reuse=68 mode=destroy-current
+CLIENT iteration=83 native=0x27b34fd0 id=542 reuse=68 mode=destroy-current
+CLIENT iteration=84 native=0x27b34fd0 id=548 reuse=69 mode=destroy-current
+CLIENT iteration=85 native=0x27b34fd0 id=554 reuse=70 mode=destroy-current
+CLIENT iteration=86 native=0x27a980c0 id=560 reuse=70 mode=destroy-current
+CLIENT iteration=87 native=0x27a980c0 id=566 reuse=71 mode=destroy-current
+CLIENT iteration=88 native=0x27a385b0 id=572 reuse=71 mode=destroy-current
+CLIENT iteration=89 native=0x27b6e280 id=578 reuse=71 mode=destroy-current
+CLIENT iteration=90 native=0x27b6e280 id=584 reuse=72 mode=destroy-current
+CLIENT iteration=91 native=0x27a22a20 id=590 reuse=72 mode=destroy-current
+CLIENT iteration=92 native=0x27a22a20 id=596 reuse=73 mode=destroy-current
+CLIENT iteration=93 native=0x27a22a20 id=602 reuse=74 mode=destroy-current
+CLIENT iteration=94 native=0x27a97890 id=608 reuse=74 mode=destroy-current
+CLIENT iteration=95 native=0x27a97890 id=614 reuse=75 mode=destroy-current
+CLIENT iteration=96 native=0x27a97890 id=620 reuse=76 mode=destroy-current
+CLIENT iteration=97 native=0x27b0a390 id=630 reuse=76 mode=destroy-current
+CLIENT iteration=98 native=0x27b0a390 id=632 reuse=77 mode=destroy-current
+CLIENT iteration=99 native=0x27b34c80 id=638 reuse=77 mode=destroy-current
+CLIENT iteration=100 native=0x27b34c80 id=644 reuse=78 mode=destroy-current
+CLIENT iteration=101 native=0x27b34c80 id=650 reuse=79 mode=destroy-current
+CLIENT iteration=102 native=0x27a981f0 id=656 reuse=79 mode=destroy-current
+CLIENT iteration=103 native=0x27a981f0 id=662 reuse=80 mode=destroy-current
+CLIENT iteration=104 native=0x27a981f0 id=668 reuse=81 mode=destroy-current
+CLIENT iteration=105 native=0x27ad4140 id=674 reuse=81 mode=destroy-current
+CLIENT iteration=106 native=0x27ad4140 id=680 reuse=82 mode=destroy-current
+CLIENT iteration=107 native=0x27ad4140 id=686 reuse=83 mode=destroy-current
+CLIENT iteration=108 native=0x27ad4140 id=692 reuse=84 mode=destroy-current
+CLIENT iteration=109 native=0x27ad4140 id=698 reuse=85 mode=destroy-current
+CLIENT iteration=110 native=0x27ad9490 id=704 reuse=85 mode=destroy-current
+CLIENT iteration=111 native=0x27ad9490 id=710 reuse=86 mode=destroy-current
+CLIENT iteration=112 native=0x27ad9490 id=716 reuse=87 mode=destroy-current
+CLIENT iteration=113 native=0x27a6d4f0 id=722 reuse=87 mode=destroy-current
+CLIENT iteration=114 native=0x27a97890 id=728 reuse=87 mode=destroy-current
+CLIENT iteration=115 native=0x27a97890 id=734 reuse=88 mode=destroy-current
+CLIENT iteration=116 native=0x27ac2d60 id=744 reuse=88 mode=destroy-current
+CLIENT iteration=117 native=0x27ac2d60 id=746 reuse=89 mode=destroy-current
+CLIENT iteration=118 native=0x27a52dc0 id=752 reuse=89 mode=destroy-current
+CLIENT iteration=119 native=0x27a52dc0 id=758 reuse=90 mode=destroy-current
+CLIENT iteration=120 native=0x27a52dc0 id=764 reuse=91 mode=destroy-current
+CLIENT iteration=121 native=0x27ac89c0 id=770 reuse=91 mode=destroy-current
+CLIENT iteration=122 native=0x27ac89c0 id=776 reuse=92 mode=destroy-current
+CLIENT iteration=123 native=0x27ac89c0 id=782 reuse=93 mode=destroy-current
+CLIENT iteration=124 native=0x27a67db0 id=788 reuse=93 mode=destroy-current
+CLIENT iteration=125 native=0x27a67db0 id=794 reuse=94 mode=destroy-current
+CLIENT iteration=126 native=0x27b34b40 id=800 reuse=94 mode=destroy-current
+CLIENT iteration=127 native=0x27a04310 id=806 reuse=94 mode=destroy-current
+PASS mode=destroy-current commits=128 bad=0 pointer_reuses=94
+

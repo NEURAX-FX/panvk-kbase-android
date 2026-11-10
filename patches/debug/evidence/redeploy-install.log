@@ -1,0 +1,34 @@
+Process started with PID 7472 (shell: /bin/bash)
+Initial output:
+CURRENT /opt/panvk/e7bfef6-gbm
+SHA256 4fda984ea4d8633430cd27910a7d6d969a8728351784830bf7887b54200f3e47 /opt/panvk/e7bfef6-gbm/lib64/libvulkan_panfrost.so
+SHA256 dd59d8537cc924f91573e79184a7ca30b3438864050a4f5025eaaef1df87a538 /opt/panvk/e7bfef6-gbm/lib64/libEGL_mesa.so.0.0.0
+SHA256 788944ae5f4d7307140a98ae40bdf076c549af1bd11cce84130b72d0251c0a6f /opt/panvk/e7bfef6-gbm/lib64/libgallium-26.3.0-devel.so
+SHA256 1374ac90548ea846fc7a02b702c413218c5fc996bfb547f7483c10e361839461 /opt/panvk/e7bfef6-gbm/lib64/libgbm.so.1.0.0
+SHA256 072b0e2a06230f8e08dc1af1be6769f9199f9488baa31987290d0064223c8f8a /opt/panvk/e7bfef6-gbm/lib64/gbm/dri_gbm.so
+SHA256 9e42b7754d4cbf17029f42731cb8fa4d6e8d188acad3bf7552608166408d2624 /opt/panvk/e7bfef6-gbm/lib64/dri/libdril_dri.so
+DISPATCH /opt/panvk/e7bfef6-gbm/lib64/libgbm.so.1.0.0
+DISPATCH /opt/panvk/e7bfef6-gbm/lib64/libgbm.so.1.0.0
+DISPATCH /opt/panvk/e7bfef6-gbm/lib64/libgbm.so.1.0.0
+DISPATCH /opt/panvk/e7bfef6-gbm/lib64/libgbm.so.1.0.0
+DISPATCH /usr/lib64/libGLX.so.0.0.0
+DISPATCH /usr/lib64/libGLX.so.0.0.0
+DISPATCH /usr/lib64/libGLX.so.0.0.0
+DISPATCH /usr/lib64/libGLX.so.0.0.0
+DISPATCH /usr/lib64/libOpenGL.so.0.0.0
+DISPATCH /usr/lib64/libOpenGL.so.0.0.0
+DISPATCH /usr/lib64/libOpenGL.so.0.0.0
+DISPATCH /usr/lib64/libOpenGL.so.0.0.0
+DISPATCH /usr/lib64/libGLESv2.so.2.1.0
+DISPATCH /usr/lib64/libGLESv2.so.2.1.0
+DISPATCH /usr/lib64/libGLESv2.so.2.1.0
+DISPATCH /usr/lib64/libGLESv2.so.2.1.0
+DISPATCH /usr/lib64/libEGL.so.1.1.0
+DISPATCH /usr/lib64/libEGL.so.1.1.0
+DISPATCH /usr/lib64/libEGL.so.1.1.0
+DISPATCH /usr/lib64/libEGL.so.1.1.0
+
+✅ Process 7472 has finished execution
+
+
+[executed on device: MT6989-DS (0b072e10-6c14-487c-b0bb-06323b8bd3b7)]
