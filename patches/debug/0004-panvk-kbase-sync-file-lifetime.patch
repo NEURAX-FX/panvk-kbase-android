@@ -1,0 +1,65 @@
+diff --git a/src/panfrost/vulkan/panvk_physical_device.c b/src/panfrost/vulkan/panvk_physical_device.c
+index 06c661e..8f34389 100644
+--- a/src/panfrost/vulkan/panvk_physical_device.c
++++ b/src/panfrost/vulkan/panvk_physical_device.c
+@@ -715,6 +715,8 @@ kbase_cpu_sync_signal(UNUSED struct vk_device *device, struct vk_sync *sync,
+ {
+    struct kbase_cpu_sync *ks = container_of(sync, struct kbase_cpu_sync, sync);
+    mtx_lock(&ks->mutex);
++   assert(ks->state != KBASE_CPU_SYNC_WAITING);
++   kbase_sync_file_waiter_free(ks);
+    ks->state = KBASE_CPU_SYNC_SIGNALED;
+    ks->result = VK_SUCCESS;
+    ks->pending_data = NULL;
+@@ -730,6 +732,7 @@ kbase_cpu_sync_reset(UNUSED struct vk_device *device, struct vk_sync *sync)
+    struct kbase_cpu_sync *ks = container_of(sync, struct kbase_cpu_sync, sync);
+    mtx_lock(&ks->mutex);
+    assert(ks->state != KBASE_CPU_SYNC_WAITING);
++   kbase_sync_file_waiter_free(ks);
+    ks->state = KBASE_CPU_SYNC_RESET;
+    ks->result = VK_SUCCESS;
+    ks->pending_data = NULL;
+@@ -761,6 +764,7 @@ panvk_kbase_sync_set_pending(
+     * (e.g. a reused WSI semaphore that was CPU-waited) is legal.  Only an
+     * in-progress wait on the old payload would be a genuine bug. */
+    assert(ks->state != KBASE_CPU_SYNC_WAITING);
++   kbase_sync_file_waiter_free(ks);
+    ks->pending_data = data;
+    ks->pending_wait = wait;
+    memcpy(ks->targets, targets, sizeof(ks->targets));
+@@ -871,6 +875,7 @@ kbase_cpu_sync_wait_one(struct vk_device *device, struct kbase_cpu_sync *ks,
+ 
+          mtx_lock(&ks->mutex);
+          if (result == VK_SUCCESS) {
++            kbase_sync_file_waiter_free(ks);
+             ks->state = KBASE_CPU_SYNC_SIGNALED;
+             ks->pending_data = NULL;
+             ks->pending_wait = NULL;
+@@ -963,6 +968,7 @@ kbase_cpu_sync_move(UNUSED struct vk_device *device, struct vk_sync *dst,
+    mtx_lock(&second->mutex);
+    assert(ks_src->state != KBASE_CPU_SYNC_WAITING);
+    assert(ks_dst->state != KBASE_CPU_SYNC_WAITING);
++   kbase_sync_file_waiter_free(ks_dst);
+ 
+    ks_dst->state = ks_src->state;
+    ks_dst->result = ks_src->result;
+@@ -1045,8 +1051,6 @@ kbase_cpu_sync_import_sync_file(struct vk_device *device,
+                                 struct vk_sync *sync,
+                                 int sync_file)
+ {
+-   struct kbase_cpu_sync *ks = container_of(sync, struct kbase_cpu_sync, sync);
+-
+    if (sync_file < 0) {
+       return vk_errorf(device, VK_ERROR_INVALID_EXTERNAL_HANDLE,
+                        "Invalid sync_file fd: %d", sync_file);
+@@ -1065,10 +1069,6 @@ kbase_cpu_sync_import_sync_file(struct vk_device *device,
+ 
+    uint64_t targets[PANVK_KBASE_SYNC_TARGET_COUNT] = {0};
+ 
+-   mtx_lock(&ks->mutex);
+-   kbase_sync_file_waiter_free(ks);
+-   mtx_unlock(&ks->mutex);
+-
+    panvk_kbase_sync_set_pending(sync, waiter, kbase_sync_file_wait_func, targets,
+                                 NULL);
+ 

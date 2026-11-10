@@ -470,8 +470,11 @@ Vulkan manifest's `library_path` was made relative:
 `artifacts/egl-gbm-aarch64.tar.zst`, with SHA-256:
 
 ```text
-2d2709418470e7f601a55568d9142187f16a724e6759104df30449a67e1f0b72
+c749d20376c90bfe9aaf6fee4c2338ebbe61ba2f7144877ee3fca4d8fc897de0
 ```
+
+This checksum includes the later kbase sync-file lifetime fix below; the EGL,
+GBM, and Gallium libraries are unchanged from the original GBM build.
 
 All six installed ELF libraries were checked with `file`, `readelf -h`,
 `readelf -d`, and `readelf --version-info`: ELF64 AArch64, glibc symbol versions,
@@ -494,3 +497,112 @@ select its `usr/lib64` with `LD_LIBRARY_PATH`, `usr/lib64/gbm` with
 manifest with `__EGL_VENDOR_LIBRARY_FILENAMES`. Keep Fedora's GLVND dispatch
 libraries. No device installation, default-selector change, or display-server
 restart was performed for this build.
+
+## kbase imported sync-file descriptor leak (2026-11-10)
+
+`0004-panvk-kbase-sync-file-lifetime.patch` fixes descriptor and waiter leaks in
+`src/panfrost/vulkan/panvk_physical_device.c`. Apply it to the same fully patched
+p0175 Mesa tree; it does not require GBM or alter Zink/device matching.
+
+The reported `DMA_HEAP_IOCTL_ALLOC failed: Too many open files` was `EMFILE`,
+not GPU memory exhaustion. Inspection of the failing Xvfb `:96` process found
+1023 open descriptors against a soft limit of 1024; 992 were `sync_file`.
+Picom's sync-file count grew from 9153 to 11068 while it held only three
+dma-bufs. Both loaded the existing PanVK ICD, not the newly staged GBM build.
+
+The kbase sync-file import duplicates the input descriptor and stores it in a
+heap-allocated waiter. Mesa's common Vulkan import code closes the original
+descriptor on success. The kbase wait-success path instead discarded
+`pending_data`/`pending_wait` without releasing its duplicate or waiter; reset
+and signal had the same ownership loss. The patch releases the old imported
+payload under the existing mutex before completed waits, resets, signals,
+pending-payload replacement, and destination replacement during a move. Move
+still transfers the source payload; timeout retains it for a subsequent wait.
+Import replacement now uses the same locked replacement path instead of a
+separate free/unlock/relock sequence. Queue-owned payloads are not freed.
+
+### Reproduction and regression
+
+`sync-fd-lifetime-probe.c` uses real Vulkan calls and sync files exported from
+a 4 KiB dma-heap buffer. The timeout case attaches an unsignaled vgem fence,
+checks `VK_TIMEOUT`/`VK_NOT_READY`, signals it, and waits again. It opens only
+`/dev/dri/renderD128`, never a primary/KMS node. Compile from the workspace:
+
+```bash
+aarch64-linux-gnu-gcc --sysroot="$SYSROOT" -isystem "$SYSROOT/usr/include" \
+  -I mesa/include -O2 -Wall -Wextra -Werror \
+  panvk-kbase-android/patches/debug/sync-fd-lifetime-probe.c \
+  -Wl,-rpath-link,"$SYSROOT/usr/lib64" -l:libvulkan.so.1 \
+  -o artifacts/sync-fd-lifetime-probe
+```
+
+The target needs the Vulkan loader and PanVK; the probe rejects other drivers.
+On MT6989, use the isolated manifest and preserve the original 1024-fd limit:
+
+```bash
+ulimit -n 1024
+for mode in wait reset signal replace destroy semaphore timeout; do
+  env -u VK_ICD_FILENAMES -u VK_LOADER_DRIVERS_SELECT \
+    VK_DRIVER_FILES=/root/panvk-wsi-debug/sync-fd-fix/panvk-sync-fd.json \
+    /root/panvk-wsi-debug/sync-fd-lifetime-probe "$mode" 4096 || exit 1
+done
+```
+
+| Scenario | Before | Fixed |
+|---|---|---|
+| Fence wait | 128 iterations, fd 9 → 137 | 4096 iterations, fd 9 → 9 |
+| Reset imported fence | 32 iterations, fd 9 → 41 | 4096 iterations, fd 9 → 9 |
+| Replace with signaled `fd=-1` | 32 iterations, fd 9 → 41 | 4096 iterations, fd 9 → 9 |
+| Replace imported payload | 32 iterations, fd 9 → 9 | 4096 iterations, fd 9 → 9 |
+| Destroy without waiting | 32 iterations, fd 9 → 9 | 4096 iterations, fd 9 → 9 |
+| Queue wait on imported semaphore | 32 iterations, fd 9 → 41 | 4096 iterations, fd 9 → 9 |
+| Timeout, signal, then wait | 32 iterations, fd 10 → 42 | 4096 iterations, fd 10 → 10 |
+
+Baseline/fixed logs are `evidence/sync-fd-before.log` and
+`evidence/sync-fd-after.log`. The initial 128-wait reproduction was captured in
+the session output; the baseline file records the subsequent six modes.
+
+An isolated Xvfb + Picom GLX session then performed 1152 alternating red/green
+window fills and checked each readback pixel. At every 128-frame sample, Xvfb
+held 22 descriptors and Picom 13, with zero sync-file descriptors in both.
+Their process maps selected the fixed ICD; `glxinfo` reported Zink/PanVK
+Mali-G720, not llvmpipe. This is window readback and descriptor-lifetime
+verification, not an Android screen capture. Evidence:
+`evidence/sync-fd-xvfb-picom.log`. The first throwaway harness run failed because
+closing its display-number pipe allowed Xvfb's last-client reset to hit EPIPE;
+holding the client connection and pipe open corrected the harness. The known
+initial `ZINK: failed to choose pdev` remains outside this fix's scope.
+
+### Build, artifacts, and default selection
+
+The fixed ICD was rebuilt with `ninja -C build/cross-panvk-wayland-final -j12
+src/panfrost/vulkan/libvulkan_panfrost.so`, then stripped with
+`aarch64-linux-gnu-strip --strip-unneeded`. `file` and all three `readelf`
+checks confirm ELF64 AArch64, glibc (maximum required version `GLIBC_2.38`),
+and no Bionic dependencies. The GBM build's ICD was rebuilt as well and the
+EGL/GBM archive and checksums above refreshed.
+
+- Standalone archive: `artifacts/panvk-sync-fd-aarch64.tar.zst` (ICD, relative
+  manifest, and regression executable).
+- Archive SHA-256: `c5c0da904ddb60ecaeaee516e1ed6809d29940de00d446a370aa36b689495038`.
+- Installed library: `/opt/panvk/sync-fd-4fda984e/lib64/libvulkan_panfrost.so`.
+- Library SHA-256: `4fda984ea4d8633430cd27910a7d6d969a8728351784830bf7887b54200f3e47`.
+- `/etc/vulkan/icd.d/panvk-kbase.json` now selects that isolated library.
+- Previous manifest: `/root/panvk-wsi-debug/backup-sync-fd-4fda984e/panvk-kbase.json`.
+
+A clean invocation using `VK_LOADER_DRIVERS_SELECT=panvk-kbase.json`, without
+`VK_DRIVER_FILES`/`VK_ICD_FILENAMES`, passed 4096 semaphore cycles with fd 9 → 9
+after the selector change (`evidence/sync-fd-default.log`). No limit was raised,
+no synchronization was disabled, and no running desktop process was killed or
+restarted. Existing Xvfb/Picom processes retain their old mappings and leaked
+descriptors until restarted; changing the manifest cannot repair them in place.
+The EGL vendor selection, existing libraries, and `/opt/panvk/current` remain
+unchanged. Restore the previous ICD selection if needed:
+
+```bash
+cp /root/panvk-wsi-debug/backup-sync-fd-4fda984e/panvk-kbase.json \
+   /etc/vulkan/icd.d/panvk-kbase.json
+```
+
+Restart affected applications after changing the selection. The rollback copy
+is retained but was not executed after successful verification.
