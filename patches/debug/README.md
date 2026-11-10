@@ -361,3 +361,76 @@ to that path. Each log must end in `PASS`, `commits=128`, and `bad=0`.
 The `recreate` run must also record native address reuse to exercise the
 original collision. Omitting the `lifetime-fix` directory from
 `LD_LIBRARY_PATH` restores the previous Gallium runtime for the test process.
+
+## Installed as the MT6989 default (2026-11-10)
+
+At the user's request, the patched stack is now the default EGL vendor and
+PanVK selection. Fedora's GLVND `libEGL.so.1`, `libGLESv2.so.2`,
+`libOpenGL.so.0`, and `libGLdispatch.so.0` were retained. The non-GLVND test
+EGL library was **not** copied over them: the same patched source was rebuilt
+with `-Dglvnd=enabled -Dopengl=true`, using target-side Fedora 45
+`libglvnd-devel` and `libglvnd-core-devel` headers/pkg-config metadata.
+The other EGL cross-build options are unchanged; the build directory is
+`build/cross-egl-glvnd-default`. The final target was
+`src/egl/libEGL_mesa.so.0.0.0`, built with Ninja `-j12`.
+
+Installation on the target:
+
+- `/opt/panvk/current` points to `/opt/panvk/f803bcc-glvnd`.
+- Its `lib64/` contains the new `libEGL_mesa.so.0`, matching
+  `libgallium-26.3.0-devel.so`, and the previously tested PanVK ICD.
+- `patchelf --set-rpath '$ORIGIN'` on the installed EGL vendor replaces its
+  build-tree RPATH so it finds its matching Gallium library beside itself.
+- `/usr/share/glvnd/egl_vendor.d/50_mesa.json` selects
+  `/opt/panvk/current/lib64/libEGL_mesa.so.0`.
+- `/etc/vulkan/icd.d/panvk-kbase.json` selects
+  `/opt/panvk/current/lib64/libvulkan_panfrost.so`.
+- `/etc/environment.d/90-panvk-zink.conf` sets
+  `MESA_LOADER_DRIVER_OVERRIDE=zink`, `GALLIUM_DRIVER=zink`, and
+  `VK_LOADER_DRIVERS_SELECT=panvk-kbase.json`.
+- `/etc/profile.d/90-panvk-zink.sh` imports and exports those settings for
+  login/interactive shells. No global `LD_LIBRARY_PATH`, `VK_DRIVER_FILES`,
+  or `__EGL_VENDOR_LIBRARY_FILENAMES` override was installed.
+
+Installed SHA-256 values:
+
+```text
+be88cefb2801524842adc4952469c2d63dbc92102108bb08dc4ddf6b4fe43c89  libEGL_mesa.so.0
+788944ae5f4d7307140a98ae40bdf076c549af1bd11cce84130b72d0251c0a6f  libgallium-26.3.0-devel.so
+3ba2d5328fd13bd05329cbfad0af91b018c570d42d373a3bd7e9bb253d6fac1c  libvulkan_panfrost.so
+```
+
+Verification used a cleared environment and a normal Bash login shell. It
+asserted that the three test-only path overrides above were unset, then ran
+all four lifecycle modes: each consumed 128 frames with `bad=0`; native
+recreation reused an address 84 times and destroy-current reused it 82 times.
+An additional throwaway desktop-GL smoke used the system `libEGL.so.1` and
+`libOpenGL.so.0`, requested a GL 3.3 core context, obtained OpenGL 4.6
+`MESA_PANVK`, and verified all 256 pbuffer pixels as opaque red. Its process
+maps confirm the system GLVND dispatch libraries plus all three libraries
+under `/opt/panvk/f803bcc-glvnd/lib64`. Logs are in
+`patches/debug/evidence/default-*.log`. A clean Zsh login also inherited all
+three default settings with `LD_LIBRARY_PATH` unset. Original Fedora EGL,
+GLES, OpenGL, EGL-vendor, and `/root/PanKbase` ICD hashes remained unchanged.
+
+No compositor/session restart was performed. Existing processes keep their
+old mappings; existing shells can load the selection with
+`. /etc/profile.d/90-panvk-zink.sh`, and restarted applications then use the
+new vendor. The live Noctalia/niri output and Kitty window remain outside
+this verification; the desktop-GL smoke checks API dispatch and pixels, not
+a visible terminal. System GLX remains Fedora's existing vendor. Package
+updates may replace `50_mesa.json` and thereby reset the EGL vendor selection.
+
+The original manifests, wrapper, and original-library checksum list are in
+`/root/panvk-wsi-debug/backup-default-S1Touj`. Roll back with:
+
+```bash
+sh /root/panvk-wsi-debug/backup-default-S1Touj/rollback.sh
+```
+
+This restores the original EGL and Vulkan manifests, removes the two added
+environment files and the `current` selector, and leaves the installed
+versioned libraries available for inspection. Restart affected applications
+and the login session to discard their old mappings/environment. The rollback
+script was syntax-checked; it was not executed after the successful default
+deployment.

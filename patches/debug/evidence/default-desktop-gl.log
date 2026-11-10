@@ -1,0 +1,22 @@
+MESA: info: kbase: CSF driver, uAPI version 1.21, page_size=4096
+MESA: info: kbase: coherency mode 0 (ACE-Lite), shaderDeviceClock off (strict, PANVK_KBASE_STRICT_DEVICE_CLOCK=0 = 114), coherent pools off (PANVK_KBASE_COHERENT_POOLS=1 enables)
+MESA: info: kbase: timestamp calibration: CSF, keeping cntfrq 13000000 Hz (PANVK_KBASE_TS_CALIBRATE=1 = measure)
+MESA: info: panvk: gpu_id 0xc8700000 variant 0x4 arch v12 model Mali-G720 texture_features 0xc7fe001e 0 0 0
+MESA: info: panvk: BC emulation on, lowmem (native compressed mask 0xc7fe001e)
+WARNING: panvk is not a conformant Vulkan implementation, testing use only.
+MESA: info: kbase: CSF driver, uAPI version 1.21, page_size=4096
+MESA: info: kbase: coherency mode 0 (ACE-Lite), shaderDeviceClock off (strict, PANVK_KBASE_STRICT_DEVICE_CLOCK=0 = 114), coherent pools off (PANVK_KBASE_COHERENT_POOLS=1 enables)
+MESA: info: kbase: timestamp calibration: CSF, keeping cntfrq 13000000 Hz (PANVK_KBASE_TS_CALIBRATE=1 = measure)
+MESA: info: kbase: mem_alloc via ALLOC_EX
+MESA: info: kbase: queue_group_create layout=112 bytes, 3 CS, csi_handlers 0x1
+MESA: info: kbase: tiler heaps 4 initial / 400 max chunks of 1024 KiB
+MESA: info: kbase: tiler_heap_init layout=16 bytes
+GL_RENDERER=zink Vulkan 1.4(Mali-G720-Immortalis MC12 (MESA_PANVK))
+GL_VERSION=4.6 (Core Profile) Mesa 26.3.0-devel (git-13c98a0341, p0175, 2026-11-10)
+MAP=/opt/panvk/f803bcc-glvnd/lib64/libEGL_mesa.so.0
+MAP=/opt/panvk/f803bcc-glvnd/lib64/libgallium-26.3.0-devel.so
+MAP=/opt/panvk/f803bcc-glvnd/lib64/libvulkan_panfrost.so
+MAP=/usr/lib64/libEGL.so.1.1.0
+MAP=/usr/lib64/libGLdispatch.so.0.0.0
+MAP=/usr/lib64/libOpenGL.so.0.0.0
+PASS desktop-GL GLVND pixels=256 rgba=ff0000ff

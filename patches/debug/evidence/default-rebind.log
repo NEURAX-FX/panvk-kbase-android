@@ -1,0 +1,156 @@
+MESA: info: kbase: CSF driver, uAPI version 1.21, page_size=4096
+MESA: info: kbase: coherency mode 0 (ACE-Lite), shaderDeviceClock off (strict, PANVK_KBASE_STRICT_DEVICE_CLOCK=0 = 114), coherent pools off (PANVK_KBASE_COHERENT_POOLS=1 enables)
+MESA: info: kbase: timestamp calibration: CSF, keeping cntfrq 13000000 Hz (PANVK_KBASE_TS_CALIBRATE=1 = measure)
+MESA: info: panvk: gpu_id 0xc8700000 variant 0x4 arch v12 model Mali-G720 texture_features 0xc7fe001e 0 0 0
+MESA: info: panvk: BC emulation on, lowmem (native compressed mask 0xc7fe001e)
+WARNING: panvk is not a conformant Vulkan implementation, testing use only.
+MESA: info: kbase: CSF driver, uAPI version 1.21, page_size=4096
+MESA: info: kbase: coherency mode 0 (ACE-Lite), shaderDeviceClock off (strict, PANVK_KBASE_STRICT_DEVICE_CLOCK=0 = 114), coherent pools off (PANVK_KBASE_COHERENT_POOLS=1 enables)
+MESA: info: kbase: timestamp calibration: CSF, keeping cntfrq 13000000 Hz (PANVK_KBASE_TS_CALIBRATE=1 = measure)
+MESA: info: kbase: mem_alloc via ALLOC_EX
+MESA: info: kbase: queue_group_create layout=112 bytes, 3 CS, csi_handlers 0x1
+MESA: info: kbase: tiler heaps 4 initial / 400 max chunks of 1024 KiB
+MESA: info: kbase: tiler_heap_init layout=16 bytes
+MESA: info: kbase: CSF driver, uAPI version 1.21, page_size=4096
+MESA: info: kbase: coherency mode 0 (ACE-Lite), shaderDeviceClock off (strict, PANVK_KBASE_STRICT_DEVICE_CLOCK=0 = 114), coherent pools off (PANVK_KBASE_COHERENT_POOLS=1 enables)
+MESA: info: kbase: timestamp calibration: CSF, keeping cntfrq 13000000 Hz (PANVK_KBASE_TS_CALIBRATE=1 = measure)
+MESA: info: panvk: gpu_id 0xc8700000 variant 0x4 arch v12 model Mali-G720 texture_features 0xc7fe001e 0 0 0
+MESA: info: panvk: BC emulation on, lowmem (native compressed mask 0xc7fe001e)
+WARNING: panvk is not a conformant Vulkan implementation, testing use only.
+MESA: info: kbase: CSF driver, uAPI version 1.21, page_size=4096
+MESA: info: kbase: coherency mode 0 (ACE-Lite), shaderDeviceClock off (strict, PANVK_KBASE_STRICT_DEVICE_CLOCK=0 = 114), coherent pools off (PANVK_KBASE_COHERENT_POOLS=1 enables)
+MESA: info: kbase: timestamp calibration: CSF, keeping cntfrq 13000000 Hz (PANVK_KBASE_TS_CALIBRATE=1 = measure)
+MESA: info: kbase: mem_alloc via ALLOC_EX
+MESA: info: kbase: queue_group_create layout=112 bytes, 3 CS, csi_handlers 0x1
+MESA: info: kbase: tiler heaps 4 initial / 400 max chunks of 1024 KiB
+MESA: info: kbase: tiler_heap_init layout=16 bytes
+CLIENT iteration=0 native=0x2b5e6bf0 id=6 reuse=0 mode=rebind
+GL_RENDERER=zink Vulkan 1.4(Mali-G720-Immortalis MC12 (MESA_PANVK))
+CLIENT iteration=1 native=0x2b5e6bf0 id=6 reuse=1 mode=rebind
+CLIENT iteration=2 native=0x2b5e6bf0 id=6 reuse=2 mode=rebind
+CLIENT iteration=3 native=0x2b5e6bf0 id=6 reuse=3 mode=rebind
+CLIENT iteration=4 native=0x2b5e6bf0 id=6 reuse=4 mode=rebind
+CLIENT iteration=5 native=0x2b5e6bf0 id=6 reuse=5 mode=rebind
+CLIENT iteration=6 native=0x2b5e6bf0 id=6 reuse=6 mode=rebind
+CLIENT iteration=7 native=0x2b5e6bf0 id=6 reuse=7 mode=rebind
+CLIENT iteration=8 native=0x2b5e6bf0 id=6 reuse=8 mode=rebind
+CLIENT iteration=9 native=0x2b5e6bf0 id=6 reuse=9 mode=rebind
+CLIENT iteration=10 native=0x2b5e6bf0 id=6 reuse=10 mode=rebind
+CLIENT iteration=11 native=0x2b5e6bf0 id=6 reuse=11 mode=rebind
+CLIENT iteration=12 native=0x2b5e6bf0 id=6 reuse=12 mode=rebind
+CLIENT iteration=13 native=0x2b5e6bf0 id=6 reuse=13 mode=rebind
+CLIENT iteration=14 native=0x2b5e6bf0 id=6 reuse=14 mode=rebind
+CLIENT iteration=15 native=0x2b5e6bf0 id=6 reuse=15 mode=rebind
+CLIENT iteration=16 native=0x2b5e6bf0 id=6 reuse=16 mode=rebind
+CLIENT iteration=17 native=0x2b5e6bf0 id=6 reuse=17 mode=rebind
+CLIENT iteration=18 native=0x2b5e6bf0 id=6 reuse=18 mode=rebind
+CLIENT iteration=19 native=0x2b5e6bf0 id=6 reuse=19 mode=rebind
+CLIENT iteration=20 native=0x2b5e6bf0 id=6 reuse=20 mode=rebind
+CLIENT iteration=21 native=0x2b5e6bf0 id=6 reuse=21 mode=rebind
+CLIENT iteration=22 native=0x2b5e6bf0 id=6 reuse=22 mode=rebind
+CLIENT iteration=23 native=0x2b5e6bf0 id=6 reuse=23 mode=rebind
+CLIENT iteration=24 native=0x2b5e6bf0 id=6 reuse=24 mode=rebind
+CLIENT iteration=25 native=0x2b5e6bf0 id=6 reuse=25 mode=rebind
+CLIENT iteration=26 native=0x2b5e6bf0 id=6 reuse=26 mode=rebind
+CLIENT iteration=27 native=0x2b5e6bf0 id=6 reuse=27 mode=rebind
+CLIENT iteration=28 native=0x2b5e6bf0 id=6 reuse=28 mode=rebind
+CLIENT iteration=29 native=0x2b5e6bf0 id=6 reuse=29 mode=rebind
+CLIENT iteration=30 native=0x2b5e6bf0 id=6 reuse=30 mode=rebind
+CLIENT iteration=31 native=0x2b5e6bf0 id=6 reuse=31 mode=rebind
+CLIENT iteration=32 native=0x2b5e6bf0 id=6 reuse=32 mode=rebind
+CLIENT iteration=33 native=0x2b5e6bf0 id=6 reuse=33 mode=rebind
+CLIENT iteration=34 native=0x2b5e6bf0 id=6 reuse=34 mode=rebind
+CLIENT iteration=35 native=0x2b5e6bf0 id=6 reuse=35 mode=rebind
+CLIENT iteration=36 native=0x2b5e6bf0 id=6 reuse=36 mode=rebind
+CLIENT iteration=37 native=0x2b5e6bf0 id=6 reuse=37 mode=rebind
+CLIENT iteration=38 native=0x2b5e6bf0 id=6 reuse=38 mode=rebind
+CLIENT iteration=39 native=0x2b5e6bf0 id=6 reuse=39 mode=rebind
+CLIENT iteration=40 native=0x2b5e6bf0 id=6 reuse=40 mode=rebind
+CLIENT iteration=41 native=0x2b5e6bf0 id=6 reuse=41 mode=rebind
+CLIENT iteration=42 native=0x2b5e6bf0 id=6 reuse=42 mode=rebind
+CLIENT iteration=43 native=0x2b5e6bf0 id=6 reuse=43 mode=rebind
+CLIENT iteration=44 native=0x2b5e6bf0 id=6 reuse=44 mode=rebind
+CLIENT iteration=45 native=0x2b5e6bf0 id=6 reuse=45 mode=rebind
+CLIENT iteration=46 native=0x2b5e6bf0 id=6 reuse=46 mode=rebind
+CLIENT iteration=47 native=0x2b5e6bf0 id=6 reuse=47 mode=rebind
+CLIENT iteration=48 native=0x2b5e6bf0 id=6 reuse=48 mode=rebind
+CLIENT iteration=49 native=0x2b5e6bf0 id=6 reuse=49 mode=rebind
+CLIENT iteration=50 native=0x2b5e6bf0 id=6 reuse=50 mode=rebind
+CLIENT iteration=51 native=0x2b5e6bf0 id=6 reuse=51 mode=rebind
+CLIENT iteration=52 native=0x2b5e6bf0 id=6 reuse=52 mode=rebind
+CLIENT iteration=53 native=0x2b5e6bf0 id=6 reuse=53 mode=rebind
+CLIENT iteration=54 native=0x2b5e6bf0 id=6 reuse=54 mode=rebind
+CLIENT iteration=55 native=0x2b5e6bf0 id=6 reuse=55 mode=rebind
+CLIENT iteration=56 native=0x2b5e6bf0 id=6 reuse=56 mode=rebind
+CLIENT iteration=57 native=0x2b5e6bf0 id=6 reuse=57 mode=rebind
+CLIENT iteration=58 native=0x2b5e6bf0 id=6 reuse=58 mode=rebind
+CLIENT iteration=59 native=0x2b5e6bf0 id=6 reuse=59 mode=rebind
+CLIENT iteration=60 native=0x2b5e6bf0 id=6 reuse=60 mode=rebind
+CLIENT iteration=61 native=0x2b5e6bf0 id=6 reuse=61 mode=rebind
+CLIENT iteration=62 native=0x2b5e6bf0 id=6 reuse=62 mode=rebind
+CLIENT iteration=63 native=0x2b5e6bf0 id=6 reuse=63 mode=rebind
+CLIENT iteration=64 native=0x2b5e6bf0 id=6 reuse=64 mode=rebind
+CLIENT iteration=65 native=0x2b5e6bf0 id=6 reuse=65 mode=rebind
+CLIENT iteration=66 native=0x2b5e6bf0 id=6 reuse=66 mode=rebind
+CLIENT iteration=67 native=0x2b5e6bf0 id=6 reuse=67 mode=rebind
+CLIENT iteration=68 native=0x2b5e6bf0 id=6 reuse=68 mode=rebind
+CLIENT iteration=69 native=0x2b5e6bf0 id=6 reuse=69 mode=rebind
+CLIENT iteration=70 native=0x2b5e6bf0 id=6 reuse=70 mode=rebind
+CLIENT iteration=71 native=0x2b5e6bf0 id=6 reuse=71 mode=rebind
+CLIENT iteration=72 native=0x2b5e6bf0 id=6 reuse=72 mode=rebind
+CLIENT iteration=73 native=0x2b5e6bf0 id=6 reuse=73 mode=rebind
+CLIENT iteration=74 native=0x2b5e6bf0 id=6 reuse=74 mode=rebind
+CLIENT iteration=75 native=0x2b5e6bf0 id=6 reuse=75 mode=rebind
+CLIENT iteration=76 native=0x2b5e6bf0 id=6 reuse=76 mode=rebind
+CLIENT iteration=77 native=0x2b5e6bf0 id=6 reuse=77 mode=rebind
+CLIENT iteration=78 native=0x2b5e6bf0 id=6 reuse=78 mode=rebind
+CLIENT iteration=79 native=0x2b5e6bf0 id=6 reuse=79 mode=rebind
+CLIENT iteration=80 native=0x2b5e6bf0 id=6 reuse=80 mode=rebind
+CLIENT iteration=81 native=0x2b5e6bf0 id=6 reuse=81 mode=rebind
+CLIENT iteration=82 native=0x2b5e6bf0 id=6 reuse=82 mode=rebind
+CLIENT iteration=83 native=0x2b5e6bf0 id=6 reuse=83 mode=rebind
+CLIENT iteration=84 native=0x2b5e6bf0 id=6 reuse=84 mode=rebind
+CLIENT iteration=85 native=0x2b5e6bf0 id=6 reuse=85 mode=rebind
+CLIENT iteration=86 native=0x2b5e6bf0 id=6 reuse=86 mode=rebind
+CLIENT iteration=87 native=0x2b5e6bf0 id=6 reuse=87 mode=rebind
+CLIENT iteration=88 native=0x2b5e6bf0 id=6 reuse=88 mode=rebind
+CLIENT iteration=89 native=0x2b5e6bf0 id=6 reuse=89 mode=rebind
+CLIENT iteration=90 native=0x2b5e6bf0 id=6 reuse=90 mode=rebind
+CLIENT iteration=91 native=0x2b5e6bf0 id=6 reuse=91 mode=rebind
+CLIENT iteration=92 native=0x2b5e6bf0 id=6 reuse=92 mode=rebind
+CLIENT iteration=93 native=0x2b5e6bf0 id=6 reuse=93 mode=rebind
+CLIENT iteration=94 native=0x2b5e6bf0 id=6 reuse=94 mode=rebind
+CLIENT iteration=95 native=0x2b5e6bf0 id=6 reuse=95 mode=rebind
+CLIENT iteration=96 native=0x2b5e6bf0 id=6 reuse=96 mode=rebind
+CLIENT iteration=97 native=0x2b5e6bf0 id=6 reuse=97 mode=rebind
+CLIENT iteration=98 native=0x2b5e6bf0 id=6 reuse=98 mode=rebind
+CLIENT iteration=99 native=0x2b5e6bf0 id=6 reuse=99 mode=rebind
+CLIENT iteration=100 native=0x2b5e6bf0 id=6 reuse=100 mode=rebind
+CLIENT iteration=101 native=0x2b5e6bf0 id=6 reuse=101 mode=rebind
+CLIENT iteration=102 native=0x2b5e6bf0 id=6 reuse=102 mode=rebind
+CLIENT iteration=103 native=0x2b5e6bf0 id=6 reuse=103 mode=rebind
+CLIENT iteration=104 native=0x2b5e6bf0 id=6 reuse=104 mode=rebind
+CLIENT iteration=105 native=0x2b5e6bf0 id=6 reuse=105 mode=rebind
+CLIENT iteration=106 native=0x2b5e6bf0 id=6 reuse=106 mode=rebind
+CLIENT iteration=107 native=0x2b5e6bf0 id=6 reuse=107 mode=rebind
+CLIENT iteration=108 native=0x2b5e6bf0 id=6 reuse=108 mode=rebind
+CLIENT iteration=109 native=0x2b5e6bf0 id=6 reuse=109 mode=rebind
+CLIENT iteration=110 native=0x2b5e6bf0 id=6 reuse=110 mode=rebind
+CLIENT iteration=111 native=0x2b5e6bf0 id=6 reuse=111 mode=rebind
+CLIENT iteration=112 native=0x2b5e6bf0 id=6 reuse=112 mode=rebind
+CLIENT iteration=113 native=0x2b5e6bf0 id=6 reuse=113 mode=rebind
+CLIENT iteration=114 native=0x2b5e6bf0 id=6 reuse=114 mode=rebind
+CLIENT iteration=115 native=0x2b5e6bf0 id=6 reuse=115 mode=rebind
+CLIENT iteration=116 native=0x2b5e6bf0 id=6 reuse=116 mode=rebind
+CLIENT iteration=117 native=0x2b5e6bf0 id=6 reuse=117 mode=rebind
+CLIENT iteration=118 native=0x2b5e6bf0 id=6 reuse=118 mode=rebind
+CLIENT iteration=119 native=0x2b5e6bf0 id=6 reuse=119 mode=rebind
+CLIENT iteration=120 native=0x2b5e6bf0 id=6 reuse=120 mode=rebind
+CLIENT iteration=121 native=0x2b5e6bf0 id=6 reuse=121 mode=rebind
+CLIENT iteration=122 native=0x2b5e6bf0 id=6 reuse=122 mode=rebind
+CLIENT iteration=123 native=0x2b5e6bf0 id=6 reuse=123 mode=rebind
+CLIENT iteration=124 native=0x2b5e6bf0 id=6 reuse=124 mode=rebind
+CLIENT iteration=125 native=0x2b5e6bf0 id=6 reuse=125 mode=rebind
+CLIENT iteration=126 native=0x2b5e6bf0 id=6 reuse=126 mode=rebind
+CLIENT iteration=127 native=0x2b5e6bf0 id=6 reuse=127 mode=rebind
+PASS mode=rebind commits=128 bad=0 pointer_reuses=127
