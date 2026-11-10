@@ -434,3 +434,63 @@ versioned libraries available for inspection. Restart affected applications
 and the login session to discard their old mappings/environment. The rollback
 script was syntax-checked; it was not executed after the successful default
 deployment.
+
+## EGL/GBM-enabled build only (2026-11-10)
+
+At the user's request, GBM/vgem initialization and Xvfb acceleration diagnosis
+were stopped. This build enables the existing EGL GBM platform without adding
+a device-matching workaround or changing the target's installed graphics stack.
+The existing patched Mesa source and cross file are retained; no Mesa source
+changes were made for this build. Relative to `cross-egl-glvnd-default`, the
+graphics option change is `-Dgbm=enabled`.
+
+From `/home/neurax/panvk-wsi-debug`, with the existing native code generators:
+
+```bash
+PATH="$PWD/host-tools/bin:$PATH" env -u PKG_CONFIG_PATH \
+  meson setup build/cross-egl-glvnd-gbm mesa \
+  --cross-file cross/aarch64-cross.ini --prefix=/usr --libdir=lib64 \
+  --buildtype=release --wrap-mode=nofallback \
+  -Dplatforms=x11,wayland -Dgallium-drivers=zink,softpipe \
+  -Dvulkan-drivers=panfrost -Dpanfrost-kmds=kbase \
+  -Dmesa-clc=system -Dprecomp-compiler=system \
+  -Degl=enabled -Dgles1=disabled -Dgles2=enabled -Dopengl=true \
+  -Dglx=disabled -Dgbm=enabled -Dglvnd=enabled \
+  -Dlibunwind=disabled -Dllvm=disabled -Dzstd=disabled
+PATH="$PWD/host-tools/bin:$PATH" ninja -C build/cross-egl-glvnd-gbm -j12
+meson install -C build/cross-egl-glvnd-gbm --no-rebuild --strip \
+  --destdir "$PWD/artifacts/egl-gbm-aarch64"
+```
+
+Ninja completed all 1837 steps. The staged package contains `libEGL_mesa.so.0`,
+`libgbm.so.1`, `gbm/dri_gbm.so`, matching Gallium and PanVK libraries, DRI loader
+modules, GBM headers/pkg-config metadata, and EGL/Vulkan manifests. The staged
+Vulkan manifest's `library_path` was made relative:
+`../../../lib64/libvulkan_panfrost.so`. The archive is
+`artifacts/egl-gbm-aarch64.tar.zst`, with SHA-256:
+
+```text
+2d2709418470e7f601a55568d9142187f16a724e6759104df30449a67e1f0b72
+```
+
+All six installed ELF libraries were checked with `file`, `readelf -h`,
+`readelf -d`, and `readelf --version-info`: ELF64 AArch64, glibc symbol versions,
+and no Bionic dependencies. The bundled Gallium library requires
+`GLIBC_2.43`; this is not a package for older glibc systems.
+
+A throwaway AArch64 probe under QEMU loaded Fedora's target GLVND dispatcher
+and this package's EGL, GBM, GBM backend, and Gallium libraries. Both
+`EGL_KHR_platform_gbm` and `EGL_MESA_platform_gbm` were returned by
+`eglQueryString(EGL_NO_DISPLAY, EGL_EXTENSIONS)`. Neither `gbm_create_device`
+nor `eglInitialize` was called. This verifies compiled platform availability
+and library loading, not vgem initialization or hardware rendering. Evidence:
+`patches/debug/evidence/egl-gbm-build.log`; full ELF output remains at
+`cross/egl-gbm-verification.log` in the parent workspace.
+
+The archive passed `zstd -t` and includes per-library/manifest `SHA256SUMS`.
+It is staging-only: do not extract it over `/`. For a future isolated run,
+select its `usr/lib64` with `LD_LIBRARY_PATH`, `usr/lib64/gbm` with
+`GBM_BACKENDS_PATH`, `usr/lib64/dri` with `LIBGL_DRIVERS_PATH`, and its EGL
+manifest with `__EGL_VENDOR_LIBRARY_FILENAMES`. Keep Fedora's GLVND dispatch
+libraries. No device installation, default-selector change, or display-server
+restart was performed for this build.
