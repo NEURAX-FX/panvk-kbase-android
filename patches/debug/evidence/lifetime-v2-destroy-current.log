@@ -1,0 +1,164 @@
+MESA: info: kbase: CSF driver, uAPI version 1.21, page_size=4096
+MESA: info: kbase: coherency mode 0 (ACE-Lite), shaderDeviceClock off (strict, PANVK_KBASE_STRICT_DEVICE_CLOCK=0 = 114), coherent pools off (PANVK_KBASE_COHERENT_POOLS=1 enables)
+MESA: info: kbase: timestamp calibration: CSF, keeping cntfrq 13000000 Hz (PANVK_KBASE_TS_CALIBRATE=1 = measure)
+MESA: info: panvk: gpu_id 0xc8700000 variant 0x4 arch v12 model Mali-G720 texture_features 0xc7fe001e 0 0 0
+MESA: info: panvk: BC emulation on, lowmem (native compressed mask 0xc7fe001e)
+WARNING: panvk is not a conformant Vulkan implementation, testing use only.
+MESA: info: kbase: CSF driver, uAPI version 1.21, page_size=4096
+MESA: info: kbase: coherency mode 0 (ACE-Lite), shaderDeviceClock off (strict, PANVK_KBASE_STRICT_DEVICE_CLOCK=0 = 114), coherent pools off (PANVK_KBASE_COHERENT_POOLS=1 enables)
+MESA: info: kbase: timestamp calibration: CSF, keeping cntfrq 13000000 Hz (PANVK_KBASE_TS_CALIBRATE=1 = measure)
+MESA: info: kbase: mem_alloc via ALLOC_EX
+MESA: info: kbase: queue_group_create layout=112 bytes, 3 CS, csi_handlers 0x1
+MESA: info: kbase: tiler heaps 4 initial / 400 max chunks of 1024 KiB
+MESA: info: kbase: tiler_heap_init layout=16 bytes
+MESA: info: kbase: CSF driver, uAPI version 1.21, page_size=4096
+MESA: info: kbase: coherency mode 0 (ACE-Lite), shaderDeviceClock off (strict, PANVK_KBASE_STRICT_DEVICE_CLOCK=0 = 114), coherent pools off (PANVK_KBASE_COHERENT_POOLS=1 enables)
+MESA: info: kbase: timestamp calibration: CSF, keeping cntfrq 13000000 Hz (PANVK_KBASE_TS_CALIBRATE=1 = measure)
+MESA: info: panvk: gpu_id 0xc8700000 variant 0x4 arch v12 model Mali-G720 texture_features 0xc7fe001e 0 0 0
+MESA: info: panvk: BC emulation on, lowmem (native compressed mask 0xc7fe001e)
+WARNING: panvk is not a conformant Vulkan implementation, testing use only.
+MESA: info: kbase: CSF driver, uAPI version 1.21, page_size=4096
+MESA: info: kbase: coherency mode 0 (ACE-Lite), shaderDeviceClock off (strict, PANVK_KBASE_STRICT_DEVICE_CLOCK=0 = 114), coherent pools off (PANVK_KBASE_COHERENT_POOLS=1 enables)
+MESA: info: kbase: timestamp calibration: CSF, keeping cntfrq 13000000 Hz (PANVK_KBASE_TS_CALIBRATE=1 = measure)
+MESA: info: kbase: mem_alloc via ALLOC_EX
+MESA: info: kbase: queue_group_create layout=112 bytes, 3 CS, csi_handlers 0x1
+MESA: info: kbase: tiler heaps 4 initial / 400 max chunks of 1024 KiB
+MESA: info: kbase: tiler_heap_init layout=16 bytes
+CLIENT iteration=0 native=0xb3d1850 id=6 reuse=0 mode=destroy-current
+GL_RENDERER=zink Vulkan 1.4(Mali-G720-Immortalis MC12 (MESA_PANVK))
+PANVK_WSI_SHM_DIAG frame=1 image=0 size=64x64 pitch=256 bytes=16384 noncoherent=1 src_hash=d2bfb75560f4c325 dst_hash=d2bfb75560f4c325 src_nonzero=8192 dst_nonzero=8192 equal=1 src_px=0000ffff dst_px=0000ffff
+CLIENT iteration=1 native=0xb3d1850 id=22 reuse=1 mode=destroy-current
+PANVK_WSI_SHM_DIAG frame=2 image=0 size=64x64 pitch=256 bytes=16384 noncoherent=1 src_hash=d0530839d87ea325 dst_hash=d0530839d87ea325 src_nonzero=8192 dst_nonzero=8192 equal=1 src_px=00ff00ff dst_px=00ff00ff
+CLIENT iteration=2 native=0xb3d1850 id=32 reuse=2 mode=destroy-current
+PANVK_WSI_SHM_DIAG frame=3 image=0 size=64x64 pitch=256 bytes=16384 noncoherent=1 src_hash=79d66447807a4325 dst_hash=79d66447807a4325 src_nonzero=8192 dst_nonzero=8192 equal=1 src_px=ff0000ff dst_px=ff0000ff
+CLIENT iteration=3 native=0xb3d1850 id=42 reuse=3 mode=destroy-current
+PANVK_WSI_SHM_DIAG frame=4 image=0 size=64x64 pitch=256 bytes=16384 noncoherent=1 src_hash=d2bfb75560f4c325 dst_hash=d2bfb75560f4c325 src_nonzero=8192 dst_nonzero=8192 equal=1 src_px=0000ffff dst_px=0000ffff
+CLIENT iteration=4 native=0xb3d1850 id=52 reuse=4 mode=destroy-current
+PANVK_WSI_SHM_DIAG frame=5 image=0 size=64x64 pitch=256 bytes=16384 noncoherent=1 src_hash=d0530839d87ea325 dst_hash=d0530839d87ea325 src_nonzero=8192 dst_nonzero=8192 equal=1 src_px=00ff00ff dst_px=00ff00ff
+CLIENT iteration=5 native=0xb3d1850 id=62 reuse=5 mode=destroy-current
+PANVK_WSI_SHM_DIAG frame=6 image=0 size=64x64 pitch=256 bytes=16384 noncoherent=1 src_hash=79d66447807a4325 dst_hash=79d66447807a4325 src_nonzero=8192 dst_nonzero=8192 equal=1 src_px=ff0000ff dst_px=ff0000ff
+CLIENT iteration=6 native=0xb3d1850 id=72 reuse=6 mode=destroy-current
+PANVK_WSI_SHM_DIAG frame=7 image=0 size=64x64 pitch=256 bytes=16384 noncoherent=1 src_hash=d2bfb75560f4c325 dst_hash=d2bfb75560f4c325 src_nonzero=8192 dst_nonzero=8192 equal=1 src_px=0000ffff dst_px=0000ffff
+CLIENT iteration=7 native=0xb3d1850 id=82 reuse=7 mode=destroy-current
+PANVK_WSI_SHM_DIAG frame=8 image=0 size=64x64 pitch=256 bytes=16384 noncoherent=1 src_hash=d0530839d87ea325 dst_hash=d0530839d87ea325 src_nonzero=8192 dst_nonzero=8192 equal=1 src_px=00ff00ff dst_px=00ff00ff
+CLIENT iteration=8 native=0xb3d1850 id=92 reuse=8 mode=destroy-current
+CLIENT iteration=9 native=0xb3d1850 id=98 reuse=9 mode=destroy-current
+CLIENT iteration=10 native=0xb3d1850 id=108 reuse=10 mode=destroy-current
+CLIENT iteration=11 native=0xb3d1850 id=110 reuse=11 mode=destroy-current
+CLIENT iteration=12 native=0xb3d1850 id=116 reuse=12 mode=destroy-current
+CLIENT iteration=13 native=0xb3d1850 id=122 reuse=13 mode=destroy-current
+CLIENT iteration=14 native=0xb3d1850 id=128 reuse=14 mode=destroy-current
+CLIENT iteration=15 native=0xb3d1850 id=134 reuse=15 mode=destroy-current
+CLIENT iteration=16 native=0xb3d1850 id=144 reuse=16 mode=destroy-current
+CLIENT iteration=17 native=0xb3d1850 id=146 reuse=17 mode=destroy-current
+CLIENT iteration=18 native=0xb3d1850 id=152 reuse=18 mode=destroy-current
+CLIENT iteration=19 native=0xb3d1850 id=158 reuse=19 mode=destroy-current
+CLIENT iteration=20 native=0xb3d1850 id=164 reuse=20 mode=destroy-current
+CLIENT iteration=21 native=0xb3d1850 id=170 reuse=21 mode=destroy-current
+CLIENT iteration=22 native=0xb3d1850 id=176 reuse=22 mode=destroy-current
+CLIENT iteration=23 native=0xb3d1850 id=186 reuse=23 mode=destroy-current
+CLIENT iteration=24 native=0xb3d1850 id=188 reuse=24 mode=destroy-current
+CLIENT iteration=25 native=0xb3d1850 id=194 reuse=25 mode=destroy-current
+CLIENT iteration=26 native=0xb3d1850 id=200 reuse=26 mode=destroy-current
+CLIENT iteration=27 native=0xb3d1850 id=206 reuse=27 mode=destroy-current
+CLIENT iteration=28 native=0xb3d1850 id=212 reuse=28 mode=destroy-current
+CLIENT iteration=29 native=0xb3d1850 id=218 reuse=29 mode=destroy-current
+CLIENT iteration=30 native=0xb3d1850 id=224 reuse=30 mode=destroy-current
+CLIENT iteration=31 native=0xb3d1850 id=230 reuse=31 mode=destroy-current
+CLIENT iteration=32 native=0xb3d1850 id=236 reuse=32 mode=destroy-current
+CLIENT iteration=33 native=0xb3d1850 id=242 reuse=33 mode=destroy-current
+CLIENT iteration=34 native=0xb3d1850 id=248 reuse=34 mode=destroy-current
+CLIENT iteration=35 native=0xb3d1850 id=254 reuse=35 mode=destroy-current
+CLIENT iteration=36 native=0xb3d1850 id=260 reuse=36 mode=destroy-current
+CLIENT iteration=37 native=0xb3d1850 id=266 reuse=37 mode=destroy-current
+CLIENT iteration=38 native=0xb3d1850 id=272 reuse=38 mode=destroy-current
+CLIENT iteration=39 native=0xb3d1850 id=278 reuse=39 mode=destroy-current
+CLIENT iteration=40 native=0xb3d1850 id=284 reuse=40 mode=destroy-current
+CLIENT iteration=41 native=0xb3d1850 id=290 reuse=41 mode=destroy-current
+CLIENT iteration=42 native=0xb3d1850 id=296 reuse=42 mode=destroy-current
+CLIENT iteration=43 native=0xb3d1850 id=302 reuse=43 mode=destroy-current
+CLIENT iteration=44 native=0xb3d1850 id=308 reuse=44 mode=destroy-current
+CLIENT iteration=45 native=0xb3d1850 id=314 reuse=45 mode=destroy-current
+CLIENT iteration=46 native=0xb3d1850 id=320 reuse=46 mode=destroy-current
+CLIENT iteration=47 native=0xb3d1850 id=326 reuse=47 mode=destroy-current
+CLIENT iteration=48 native=0xb3d1850 id=332 reuse=48 mode=destroy-current
+CLIENT iteration=49 native=0xb3d1850 id=338 reuse=49 mode=destroy-current
+CLIENT iteration=50 native=0xb3d1850 id=344 reuse=50 mode=destroy-current
+CLIENT iteration=51 native=0xb3d1850 id=350 reuse=51 mode=destroy-current
+CLIENT iteration=52 native=0xb3d1850 id=356 reuse=52 mode=destroy-current
+CLIENT iteration=53 native=0xb3d1850 id=362 reuse=53 mode=destroy-current
+CLIENT iteration=54 native=0xb3d1850 id=368 reuse=54 mode=destroy-current
+CLIENT iteration=55 native=0xb3d1850 id=374 reuse=55 mode=destroy-current
+CLIENT iteration=56 native=0xb3d2e10 id=380 reuse=55 mode=destroy-current
+CLIENT iteration=57 native=0xb3d2e10 id=386 reuse=56 mode=destroy-current
+CLIENT iteration=58 native=0xb3d2e10 id=392 reuse=57 mode=destroy-current
+CLIENT iteration=59 native=0xb509f90 id=398 reuse=57 mode=destroy-current
+CLIENT iteration=60 native=0xb509f90 id=404 reuse=58 mode=destroy-current
+CLIENT iteration=61 native=0xb423f50 id=410 reuse=58 mode=destroy-current
+CLIENT iteration=62 native=0xb423f50 id=416 reuse=59 mode=destroy-current
+CLIENT iteration=63 native=0xb423f50 id=422 reuse=60 mode=destroy-current
+CLIENT iteration=64 native=0xb423f50 id=428 reuse=61 mode=destroy-current
+CLIENT iteration=65 native=0xb423f50 id=434 reuse=62 mode=destroy-current
+CLIENT iteration=66 native=0xb423f50 id=440 reuse=63 mode=destroy-current
+CLIENT iteration=67 native=0xb4df740 id=446 reuse=63 mode=destroy-current
+CLIENT iteration=68 native=0xb4df740 id=452 reuse=64 mode=destroy-current
+CLIENT iteration=69 native=0xb42cc60 id=458 reuse=64 mode=destroy-current
+CLIENT iteration=70 native=0xb42cc60 id=464 reuse=65 mode=destroy-current
+CLIENT iteration=71 native=0xb4d9b80 id=470 reuse=65 mode=destroy-current
+CLIENT iteration=72 native=0xb4d9b80 id=476 reuse=66 mode=destroy-current
+CLIENT iteration=73 native=0xb46caf0 id=482 reuse=66 mode=destroy-current
+CLIENT iteration=74 native=0xb498dc0 id=488 reuse=66 mode=destroy-current
+CLIENT iteration=75 native=0xb52cb90 id=494 reuse=66 mode=destroy-current
+CLIENT iteration=76 native=0xb52cb90 id=500 reuse=67 mode=destroy-current
+CLIENT iteration=77 native=0xb43d520 id=506 reuse=67 mode=destroy-current
+CLIENT iteration=78 native=0xb43d520 id=512 reuse=68 mode=destroy-current
+CLIENT iteration=79 native=0xb43d520 id=518 reuse=69 mode=destroy-current
+CLIENT iteration=80 native=0xb425530 id=524 reuse=69 mode=destroy-current
+CLIENT iteration=81 native=0xb3d45a0 id=530 reuse=69 mode=destroy-current
+CLIENT iteration=82 native=0xb4dfd30 id=536 reuse=69 mode=destroy-current
+CLIENT iteration=83 native=0xb3fefd0 id=542 reuse=69 mode=destroy-current
+CLIENT iteration=84 native=0xb3fefd0 id=548 reuse=70 mode=destroy-current
+CLIENT iteration=85 native=0xb49e010 id=554 reuse=70 mode=destroy-current
+CLIENT iteration=86 native=0xb49e010 id=560 reuse=71 mode=destroy-current
+CLIENT iteration=87 native=0xb49e010 id=566 reuse=72 mode=destroy-current
+CLIENT iteration=88 native=0xb4df740 id=572 reuse=72 mode=destroy-current
+CLIENT iteration=89 native=0xb43da60 id=578 reuse=72 mode=destroy-current
+CLIENT iteration=90 native=0xb43da60 id=584 reuse=73 mode=destroy-current
+CLIENT iteration=91 native=0xb412ab0 id=590 reuse=73 mode=destroy-current
+CLIENT iteration=92 native=0xb412ab0 id=596 reuse=74 mode=destroy-current
+CLIENT iteration=93 native=0xb473270 id=602 reuse=74 mode=destroy-current
+CLIENT iteration=94 native=0xb3d2e10 id=608 reuse=74 mode=destroy-current
+CLIENT iteration=95 native=0xb3d2e10 id=614 reuse=75 mode=destroy-current
+CLIENT iteration=96 native=0xb52cb90 id=620 reuse=75 mode=destroy-current
+CLIENT iteration=97 native=0xb5557e0 id=626 reuse=75 mode=destroy-current
+CLIENT iteration=98 native=0xb462d80 id=632 reuse=75 mode=destroy-current
+CLIENT iteration=99 native=0xb42bf20 id=638 reuse=75 mode=destroy-current
+CLIENT iteration=100 native=0xb42bf20 id=644 reuse=76 mode=destroy-current
+CLIENT iteration=101 native=0xb3d2c10 id=650 reuse=76 mode=destroy-current
+CLIENT iteration=102 native=0xb3fefd0 id=656 reuse=76 mode=destroy-current
+CLIENT iteration=103 native=0xb3fefd0 id=662 reuse=77 mode=destroy-current
+CLIENT iteration=104 native=0xb3fefd0 id=668 reuse=78 mode=destroy-current
+CLIENT iteration=105 native=0xb5557e0 id=674 reuse=78 mode=destroy-current
+CLIENT iteration=106 native=0xb402780 id=680 reuse=78 mode=destroy-current
+CLIENT iteration=107 native=0xb3fefd0 id=686 reuse=78 mode=destroy-current
+CLIENT iteration=108 native=0xb3e2990 id=692 reuse=78 mode=destroy-current
+CLIENT iteration=109 native=0xb5044c0 id=698 reuse=78 mode=destroy-current
+CLIENT iteration=110 native=0xb5044c0 id=704 reuse=79 mode=destroy-current
+CLIENT iteration=111 native=0xb5044c0 id=710 reuse=80 mode=destroy-current
+CLIENT iteration=112 native=0xb5044c0 id=716 reuse=81 mode=destroy-current
+CLIENT iteration=113 native=0xb3f2cc0 id=722 reuse=81 mode=destroy-current
+CLIENT iteration=114 native=0xb3ffcb0 id=728 reuse=81 mode=destroy-current
+CLIENT iteration=115 native=0xb473390 id=734 reuse=81 mode=destroy-current
+CLIENT iteration=116 native=0xb46c940 id=740 reuse=81 mode=destroy-current
+CLIENT iteration=117 native=0xb3ed160 id=746 reuse=81 mode=destroy-current
+CLIENT iteration=118 native=0xb3ed160 id=752 reuse=82 mode=destroy-current
+CLIENT iteration=119 native=0xb3ed160 id=758 reuse=83 mode=destroy-current
+CLIENT iteration=120 native=0xb3ed160 id=764 reuse=84 mode=destroy-current
+CLIENT iteration=121 native=0xb3d44c0 id=770 reuse=84 mode=destroy-current
+CLIENT iteration=122 native=0xb52d580 id=776 reuse=84 mode=destroy-current
+CLIENT iteration=123 native=0xb3ef070 id=782 reuse=84 mode=destroy-current
+CLIENT iteration=124 native=0xb50fb70 id=788 reuse=84 mode=destroy-current
+CLIENT iteration=125 native=0xb498dc0 id=794 reuse=84 mode=destroy-current
+CLIENT iteration=126 native=0xb3e81f0 id=800 reuse=84 mode=destroy-current
+CLIENT iteration=127 native=0xb42c910 id=806 reuse=84 mode=destroy-current
+PASS mode=destroy-current commits=128 bad=0 pointer_reuses=84

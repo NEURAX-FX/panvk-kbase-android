@@ -1,0 +1,73 @@
+diff --git a/src/gallium/drivers/zink/zink_kopper.c b/src/gallium/drivers/zink/zink_kopper.c
+index 950a89b..73d565f 100644
+--- a/src/gallium/drivers/zink/zink_kopper.c
++++ b/src/gallium/drivers/zink/zink_kopper.c
+@@ -241,6 +241,23 @@ find_dt_entry(struct zink_screen *screen, const struct kopper_displaytarget *cdt
+    return he;
+ }
+ 
++void
++zink_kopper_release_drawable(struct pipe_screen *pscreen,
++                            const struct kopper_loader_info *info)
++{
++   struct zink_screen *screen = zink_screen(pscreen);
++   struct kopper_displaytarget key = { .info = *info };
++   init_dt_type(&key);
++
++   simple_mtx_lock(&screen->dt_lock);
++   if (screen->dts.table) {
++      struct hash_entry *he = find_dt_entry(screen, &key);
++      if (he)
++         _mesa_hash_table_remove(&screen->dts, he);
++   }
++   simple_mtx_unlock(&screen->dt_lock);
++}
++
+ void
+ zink_kopper_deinit_displaytarget(struct zink_screen *screen, struct kopper_displaytarget *cdt)
+ {
+@@ -248,10 +265,8 @@ zink_kopper_deinit_displaytarget(struct zink_screen *screen, struct kopper_displ
+       return;
+    simple_mtx_lock(&screen->dt_lock);
+    struct hash_entry *he = find_dt_entry(screen, cdt);
+-   assert(he);
+-   /* this deinits the registered entry, which should always be the "right" entry */
+-   cdt = he->data;
+-   _mesa_hash_table_remove(&screen->dts, he);
++   if (he && he->data == cdt)
++      _mesa_hash_table_remove(&screen->dts, he);
+    simple_mtx_unlock(&screen->dt_lock);
+    destroy_swapchain(screen, cdt->swapchain);
+    prune_old_swapchains(screen, cdt, true);
+diff --git a/src/gallium/drivers/zink/zink_kopper.h b/src/gallium/drivers/zink/zink_kopper.h
+index d1971ec..d343201 100644
+--- a/src/gallium/drivers/zink/zink_kopper.h
++++ b/src/gallium/drivers/zink/zink_kopper.h
+@@ -156,6 +156,9 @@ zink_kopper_displaytarget_create(struct zink_screen *screen, unsigned tex_usage,
+                                  const void *loader_private, unsigned *stride);
+ void
+ zink_kopper_displaytarget_destroy(struct zink_screen *screen, struct kopper_displaytarget *cdt);
++void
++zink_kopper_release_drawable(struct pipe_screen *pscreen,
++                            const struct kopper_loader_info *info);
+ 
+ 
+ bool
+diff --git a/src/gallium/frontends/dri/kopper.c b/src/gallium/frontends/dri/kopper.c
+index c565d77..60e51ce 100644
+--- a/src/gallium/frontends/dri/kopper.c
++++ b/src/gallium/frontends/dri/kopper.c
+@@ -507,6 +507,13 @@ kopper_init_drawable(struct dri_drawable *drawable, bool isPixmap, int alphaBits
+ void
+ kopper_destroy_drawable(struct dri_drawable *drawable)
+ {
++#ifdef VK_USE_PLATFORM_WAYLAND_KHR
++   if (drawable->info.bos.sType == VK_STRUCTURE_TYPE_WAYLAND_SURFACE_CREATE_INFO_KHR) {
++      struct pipe_screen *pscreen = kopper_get_zink_screen(drawable->screen->base.screen);
++      zink_kopper_release_drawable(pscreen, &drawable->info);
++   }
++#endif
++
+ #ifdef VK_USE_PLATFORM_XCB_KHR
+    if (drawable->info.bos.sType == VK_STRUCTURE_TYPE_XCB_SURFACE_CREATE_INFO_KHR) {
+       VkXcbSurfaceCreateInfoKHR *xcb = (VkXcbSurfaceCreateInfoKHR *)&drawable->info.bos;

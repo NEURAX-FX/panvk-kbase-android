@@ -1,0 +1,164 @@
+MESA: info: kbase: CSF driver, uAPI version 1.21, page_size=4096
+MESA: info: kbase: coherency mode 0 (ACE-Lite), shaderDeviceClock off (strict, PANVK_KBASE_STRICT_DEVICE_CLOCK=0 = 114), coherent pools off (PANVK_KBASE_COHERENT_POOLS=1 enables)
+MESA: info: kbase: timestamp calibration: CSF, keeping cntfrq 13000000 Hz (PANVK_KBASE_TS_CALIBRATE=1 = measure)
+MESA: info: panvk: gpu_id 0xc8700000 variant 0x4 arch v12 model Mali-G720 texture_features 0xc7fe001e 0 0 0
+MESA: info: panvk: BC emulation on, lowmem (native compressed mask 0xc7fe001e)
+WARNING: panvk is not a conformant Vulkan implementation, testing use only.
+MESA: info: kbase: CSF driver, uAPI version 1.21, page_size=4096
+MESA: info: kbase: coherency mode 0 (ACE-Lite), shaderDeviceClock off (strict, PANVK_KBASE_STRICT_DEVICE_CLOCK=0 = 114), coherent pools off (PANVK_KBASE_COHERENT_POOLS=1 enables)
+MESA: info: kbase: timestamp calibration: CSF, keeping cntfrq 13000000 Hz (PANVK_KBASE_TS_CALIBRATE=1 = measure)
+MESA: info: kbase: mem_alloc via ALLOC_EX
+MESA: info: kbase: queue_group_create layout=112 bytes, 3 CS, csi_handlers 0x1
+MESA: info: kbase: tiler heaps 4 initial / 400 max chunks of 1024 KiB
+MESA: info: kbase: tiler_heap_init layout=16 bytes
+MESA: info: kbase: CSF driver, uAPI version 1.21, page_size=4096
+MESA: info: kbase: coherency mode 0 (ACE-Lite), shaderDeviceClock off (strict, PANVK_KBASE_STRICT_DEVICE_CLOCK=0 = 114), coherent pools off (PANVK_KBASE_COHERENT_POOLS=1 enables)
+MESA: info: kbase: timestamp calibration: CSF, keeping cntfrq 13000000 Hz (PANVK_KBASE_TS_CALIBRATE=1 = measure)
+MESA: info: panvk: gpu_id 0xc8700000 variant 0x4 arch v12 model Mali-G720 texture_features 0xc7fe001e 0 0 0
+MESA: info: panvk: BC emulation on, lowmem (native compressed mask 0xc7fe001e)
+WARNING: panvk is not a conformant Vulkan implementation, testing use only.
+MESA: info: kbase: CSF driver, uAPI version 1.21, page_size=4096
+MESA: info: kbase: coherency mode 0 (ACE-Lite), shaderDeviceClock off (strict, PANVK_KBASE_STRICT_DEVICE_CLOCK=0 = 114), coherent pools off (PANVK_KBASE_COHERENT_POOLS=1 enables)
+MESA: info: kbase: timestamp calibration: CSF, keeping cntfrq 13000000 Hz (PANVK_KBASE_TS_CALIBRATE=1 = measure)
+MESA: info: kbase: mem_alloc via ALLOC_EX
+MESA: info: kbase: queue_group_create layout=112 bytes, 3 CS, csi_handlers 0x1
+MESA: info: kbase: tiler heaps 4 initial / 400 max chunks of 1024 KiB
+MESA: info: kbase: tiler_heap_init layout=16 bytes
+CLIENT iteration=0 native=0x142009d0 id=6 reuse=0 mode=make-current
+GL_RENDERER=zink Vulkan 1.4(Mali-G720-Immortalis MC12 (MESA_PANVK))
+PANVK_WSI_SHM_DIAG frame=1 image=0 size=64x64 pitch=256 bytes=16384 noncoherent=1 src_hash=d2bfb75560f4c325 dst_hash=d2bfb75560f4c325 src_nonzero=8192 dst_nonzero=8192 equal=1 src_px=0000ffff dst_px=0000ffff
+CLIENT iteration=1 native=0x142009d0 id=6 reuse=1 mode=make-current
+PANVK_WSI_SHM_DIAG frame=2 image=1 size=64x64 pitch=256 bytes=16384 noncoherent=1 src_hash=d0530839d87ea325 dst_hash=d0530839d87ea325 src_nonzero=8192 dst_nonzero=8192 equal=1 src_px=00ff00ff dst_px=00ff00ff
+CLIENT iteration=2 native=0x142009d0 id=6 reuse=2 mode=make-current
+PANVK_WSI_SHM_DIAG frame=3 image=2 size=64x64 pitch=256 bytes=16384 noncoherent=1 src_hash=79d66447807a4325 dst_hash=79d66447807a4325 src_nonzero=8192 dst_nonzero=8192 equal=1 src_px=ff0000ff dst_px=ff0000ff
+CLIENT iteration=3 native=0x142009d0 id=6 reuse=3 mode=make-current
+PANVK_WSI_SHM_DIAG frame=4 image=3 size=64x64 pitch=256 bytes=16384 noncoherent=1 src_hash=d2bfb75560f4c325 dst_hash=d2bfb75560f4c325 src_nonzero=8192 dst_nonzero=8192 equal=1 src_px=0000ffff dst_px=0000ffff
+CLIENT iteration=4 native=0x142009d0 id=6 reuse=4 mode=make-current
+PANVK_WSI_SHM_DIAG frame=5 image=0 size=64x64 pitch=256 bytes=16384 noncoherent=1 src_hash=d0530839d87ea325 dst_hash=d0530839d87ea325 src_nonzero=8192 dst_nonzero=8192 equal=1 src_px=00ff00ff dst_px=00ff00ff
+CLIENT iteration=5 native=0x142009d0 id=6 reuse=5 mode=make-current
+PANVK_WSI_SHM_DIAG frame=6 image=1 size=64x64 pitch=256 bytes=16384 noncoherent=1 src_hash=79d66447807a4325 dst_hash=79d66447807a4325 src_nonzero=8192 dst_nonzero=8192 equal=1 src_px=ff0000ff dst_px=ff0000ff
+CLIENT iteration=6 native=0x142009d0 id=6 reuse=6 mode=make-current
+PANVK_WSI_SHM_DIAG frame=7 image=2 size=64x64 pitch=256 bytes=16384 noncoherent=1 src_hash=d2bfb75560f4c325 dst_hash=d2bfb75560f4c325 src_nonzero=8192 dst_nonzero=8192 equal=1 src_px=0000ffff dst_px=0000ffff
+CLIENT iteration=7 native=0x142009d0 id=6 reuse=7 mode=make-current
+PANVK_WSI_SHM_DIAG frame=8 image=3 size=64x64 pitch=256 bytes=16384 noncoherent=1 src_hash=d0530839d87ea325 dst_hash=d0530839d87ea325 src_nonzero=8192 dst_nonzero=8192 equal=1 src_px=00ff00ff dst_px=00ff00ff
+CLIENT iteration=8 native=0x142009d0 id=6 reuse=8 mode=make-current
+CLIENT iteration=9 native=0x142009d0 id=6 reuse=9 mode=make-current
+CLIENT iteration=10 native=0x142009d0 id=6 reuse=10 mode=make-current
+CLIENT iteration=11 native=0x142009d0 id=6 reuse=11 mode=make-current
+CLIENT iteration=12 native=0x142009d0 id=6 reuse=12 mode=make-current
+CLIENT iteration=13 native=0x142009d0 id=6 reuse=13 mode=make-current
+CLIENT iteration=14 native=0x142009d0 id=6 reuse=14 mode=make-current
+CLIENT iteration=15 native=0x142009d0 id=6 reuse=15 mode=make-current
+CLIENT iteration=16 native=0x142009d0 id=6 reuse=16 mode=make-current
+CLIENT iteration=17 native=0x142009d0 id=6 reuse=17 mode=make-current
+CLIENT iteration=18 native=0x142009d0 id=6 reuse=18 mode=make-current
+CLIENT iteration=19 native=0x142009d0 id=6 reuse=19 mode=make-current
+CLIENT iteration=20 native=0x142009d0 id=6 reuse=20 mode=make-current
+CLIENT iteration=21 native=0x142009d0 id=6 reuse=21 mode=make-current
+CLIENT iteration=22 native=0x142009d0 id=6 reuse=22 mode=make-current
+CLIENT iteration=23 native=0x142009d0 id=6 reuse=23 mode=make-current
+CLIENT iteration=24 native=0x142009d0 id=6 reuse=24 mode=make-current
+CLIENT iteration=25 native=0x142009d0 id=6 reuse=25 mode=make-current
+CLIENT iteration=26 native=0x142009d0 id=6 reuse=26 mode=make-current
+CLIENT iteration=27 native=0x142009d0 id=6 reuse=27 mode=make-current
+CLIENT iteration=28 native=0x142009d0 id=6 reuse=28 mode=make-current
+CLIENT iteration=29 native=0x142009d0 id=6 reuse=29 mode=make-current
+CLIENT iteration=30 native=0x142009d0 id=6 reuse=30 mode=make-current
+CLIENT iteration=31 native=0x142009d0 id=6 reuse=31 mode=make-current
+CLIENT iteration=32 native=0x142009d0 id=6 reuse=32 mode=make-current
+CLIENT iteration=33 native=0x142009d0 id=6 reuse=33 mode=make-current
+CLIENT iteration=34 native=0x142009d0 id=6 reuse=34 mode=make-current
+CLIENT iteration=35 native=0x142009d0 id=6 reuse=35 mode=make-current
+CLIENT iteration=36 native=0x142009d0 id=6 reuse=36 mode=make-current
+CLIENT iteration=37 native=0x142009d0 id=6 reuse=37 mode=make-current
+CLIENT iteration=38 native=0x142009d0 id=6 reuse=38 mode=make-current
+CLIENT iteration=39 native=0x142009d0 id=6 reuse=39 mode=make-current
+CLIENT iteration=40 native=0x142009d0 id=6 reuse=40 mode=make-current
+CLIENT iteration=41 native=0x142009d0 id=6 reuse=41 mode=make-current
+CLIENT iteration=42 native=0x142009d0 id=6 reuse=42 mode=make-current
+CLIENT iteration=43 native=0x142009d0 id=6 reuse=43 mode=make-current
+CLIENT iteration=44 native=0x142009d0 id=6 reuse=44 mode=make-current
+CLIENT iteration=45 native=0x142009d0 id=6 reuse=45 mode=make-current
+CLIENT iteration=46 native=0x142009d0 id=6 reuse=46 mode=make-current
+CLIENT iteration=47 native=0x142009d0 id=6 reuse=47 mode=make-current
+CLIENT iteration=48 native=0x142009d0 id=6 reuse=48 mode=make-current
+CLIENT iteration=49 native=0x142009d0 id=6 reuse=49 mode=make-current
+CLIENT iteration=50 native=0x142009d0 id=6 reuse=50 mode=make-current
+CLIENT iteration=51 native=0x142009d0 id=6 reuse=51 mode=make-current
+CLIENT iteration=52 native=0x142009d0 id=6 reuse=52 mode=make-current
+CLIENT iteration=53 native=0x142009d0 id=6 reuse=53 mode=make-current
+CLIENT iteration=54 native=0x142009d0 id=6 reuse=54 mode=make-current
+CLIENT iteration=55 native=0x142009d0 id=6 reuse=55 mode=make-current
+CLIENT iteration=56 native=0x142009d0 id=6 reuse=56 mode=make-current
+CLIENT iteration=57 native=0x142009d0 id=6 reuse=57 mode=make-current
+CLIENT iteration=58 native=0x142009d0 id=6 reuse=58 mode=make-current
+CLIENT iteration=59 native=0x142009d0 id=6 reuse=59 mode=make-current
+CLIENT iteration=60 native=0x142009d0 id=6 reuse=60 mode=make-current
+CLIENT iteration=61 native=0x142009d0 id=6 reuse=61 mode=make-current
+CLIENT iteration=62 native=0x142009d0 id=6 reuse=62 mode=make-current
+CLIENT iteration=63 native=0x142009d0 id=6 reuse=63 mode=make-current
+CLIENT iteration=64 native=0x142009d0 id=6 reuse=64 mode=make-current
+CLIENT iteration=65 native=0x142009d0 id=6 reuse=65 mode=make-current
+CLIENT iteration=66 native=0x142009d0 id=6 reuse=66 mode=make-current
+CLIENT iteration=67 native=0x142009d0 id=6 reuse=67 mode=make-current
+CLIENT iteration=68 native=0x142009d0 id=6 reuse=68 mode=make-current
+CLIENT iteration=69 native=0x142009d0 id=6 reuse=69 mode=make-current
+CLIENT iteration=70 native=0x142009d0 id=6 reuse=70 mode=make-current
+CLIENT iteration=71 native=0x142009d0 id=6 reuse=71 mode=make-current
+CLIENT iteration=72 native=0x142009d0 id=6 reuse=72 mode=make-current
+CLIENT iteration=73 native=0x142009d0 id=6 reuse=73 mode=make-current
+CLIENT iteration=74 native=0x142009d0 id=6 reuse=74 mode=make-current
+CLIENT iteration=75 native=0x142009d0 id=6 reuse=75 mode=make-current
+CLIENT iteration=76 native=0x142009d0 id=6 reuse=76 mode=make-current
+CLIENT iteration=77 native=0x142009d0 id=6 reuse=77 mode=make-current
+CLIENT iteration=78 native=0x142009d0 id=6 reuse=78 mode=make-current
+CLIENT iteration=79 native=0x142009d0 id=6 reuse=79 mode=make-current
+CLIENT iteration=80 native=0x142009d0 id=6 reuse=80 mode=make-current
+CLIENT iteration=81 native=0x142009d0 id=6 reuse=81 mode=make-current
+CLIENT iteration=82 native=0x142009d0 id=6 reuse=82 mode=make-current
+CLIENT iteration=83 native=0x142009d0 id=6 reuse=83 mode=make-current
+CLIENT iteration=84 native=0x142009d0 id=6 reuse=84 mode=make-current
+CLIENT iteration=85 native=0x142009d0 id=6 reuse=85 mode=make-current
+CLIENT iteration=86 native=0x142009d0 id=6 reuse=86 mode=make-current
+CLIENT iteration=87 native=0x142009d0 id=6 reuse=87 mode=make-current
+CLIENT iteration=88 native=0x142009d0 id=6 reuse=88 mode=make-current
+CLIENT iteration=89 native=0x142009d0 id=6 reuse=89 mode=make-current
+CLIENT iteration=90 native=0x142009d0 id=6 reuse=90 mode=make-current
+CLIENT iteration=91 native=0x142009d0 id=6 reuse=91 mode=make-current
+CLIENT iteration=92 native=0x142009d0 id=6 reuse=92 mode=make-current
+CLIENT iteration=93 native=0x142009d0 id=6 reuse=93 mode=make-current
+CLIENT iteration=94 native=0x142009d0 id=6 reuse=94 mode=make-current
+CLIENT iteration=95 native=0x142009d0 id=6 reuse=95 mode=make-current
+CLIENT iteration=96 native=0x142009d0 id=6 reuse=96 mode=make-current
+CLIENT iteration=97 native=0x142009d0 id=6 reuse=97 mode=make-current
+CLIENT iteration=98 native=0x142009d0 id=6 reuse=98 mode=make-current
+CLIENT iteration=99 native=0x142009d0 id=6 reuse=99 mode=make-current
+CLIENT iteration=100 native=0x142009d0 id=6 reuse=100 mode=make-current
+CLIENT iteration=101 native=0x142009d0 id=6 reuse=101 mode=make-current
+CLIENT iteration=102 native=0x142009d0 id=6 reuse=102 mode=make-current
+CLIENT iteration=103 native=0x142009d0 id=6 reuse=103 mode=make-current
+CLIENT iteration=104 native=0x142009d0 id=6 reuse=104 mode=make-current
+CLIENT iteration=105 native=0x142009d0 id=6 reuse=105 mode=make-current
+CLIENT iteration=106 native=0x142009d0 id=6 reuse=106 mode=make-current
+CLIENT iteration=107 native=0x142009d0 id=6 reuse=107 mode=make-current
+CLIENT iteration=108 native=0x142009d0 id=6 reuse=108 mode=make-current
+CLIENT iteration=109 native=0x142009d0 id=6 reuse=109 mode=make-current
+CLIENT iteration=110 native=0x142009d0 id=6 reuse=110 mode=make-current
+CLIENT iteration=111 native=0x142009d0 id=6 reuse=111 mode=make-current
+CLIENT iteration=112 native=0x142009d0 id=6 reuse=112 mode=make-current
+CLIENT iteration=113 native=0x142009d0 id=6 reuse=113 mode=make-current
+CLIENT iteration=114 native=0x142009d0 id=6 reuse=114 mode=make-current
+CLIENT iteration=115 native=0x142009d0 id=6 reuse=115 mode=make-current
+CLIENT iteration=116 native=0x142009d0 id=6 reuse=116 mode=make-current
+CLIENT iteration=117 native=0x142009d0 id=6 reuse=117 mode=make-current
+CLIENT iteration=118 native=0x142009d0 id=6 reuse=118 mode=make-current
+CLIENT iteration=119 native=0x142009d0 id=6 reuse=119 mode=make-current
+CLIENT iteration=120 native=0x142009d0 id=6 reuse=120 mode=make-current
+CLIENT iteration=121 native=0x142009d0 id=6 reuse=121 mode=make-current
+CLIENT iteration=122 native=0x142009d0 id=6 reuse=122 mode=make-current
+CLIENT iteration=123 native=0x142009d0 id=6 reuse=123 mode=make-current
+CLIENT iteration=124 native=0x142009d0 id=6 reuse=124 mode=make-current
+CLIENT iteration=125 native=0x142009d0 id=6 reuse=125 mode=make-current
+CLIENT iteration=126 native=0x142009d0 id=6 reuse=126 mode=make-current
+CLIENT iteration=127 native=0x142009d0 id=6 reuse=127 mode=make-current
+PASS mode=make-current commits=128 bad=0 pointer_reuses=127

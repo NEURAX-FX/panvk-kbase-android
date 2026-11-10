@@ -247,3 +247,117 @@ The EINVAL run has a paired Anland log (`noctalia-patched-live.log` local time i
 The 120-frame numeric screen scan found no blue-to-gray pollution in idle groups 0–3 or notification groups 4–7. It found one isolated pixel in panel group 8. Groups 10–11 reported a stable 90566-pixel region after the panel-close phase; because this is a persistent post-transition region, not transient contamination during idle/notifications, it is not counted as a confirmed shell flash. Raw frames remain on the target in `/root/panvk-wsi-debug/evidence/cv10-20261108-104441/`; they were analyzed numerically without viewing screenshots.
 
 Kitty's saved log records OpenGL context creation and a desktop OpenGL 4.6 Mesa 26.3.0-devel version string, alongside PanVK/kbase initialization. It also reports a missing portal Settings method and `No directories to watch provided`. The log has no `GL_RENDERER` line or Kitty pixel capture, so it verifies context creation but not visible terminal drawing. The compositor was unavailable for a fresh capture during resumed inspection.
+
+## Wayland displaytarget lifetime fix (2026-11-10)
+
+`0003-zink-wayland-displaytarget-lifetime.patch` is a separate, opt-in Zink/DRI
+fix for the stale native surface, not an ICD cache-coherency change. Apply it
+to the same p0175 Mesa tree after the EGL routing patch. It changes
+`libgallium-26.3.0-devel.so`; replacing only `libvulkan_panfrost.so` cannot
+activate this fix.
+
+### Root cause and scope
+
+Kopper caches displaytargets by the `wl_surface *` address. Destroying the DRI
+drawable drops its texture references, but state-tracker framebuffers and Zink
+batches may retain the resource object and therefore its displaytarget. The
+old cache entry remains until the last resource reference is released. If
+libwayland allocates a new surface at the same address first, Kopper returns
+the old displaytarget and Vulkan WSI presents through the old surface wrapper.
+Wayland object-ID reuse itself is legal; the stale cache association is not.
+
+The isolated hardware reproduction used native pointer `0x1284dfc0` first for
+ID 6, then ID 22. The second submission still addressed destroyed ID 6:
+`invalid object 6`, `Wayland=22`, one consumed frame. Both diagnostic SHM
+copies matched. Moving state-tracker framebuffer purging before validation
+still failed at the second frame; that experiment was reverted.
+
+The fix removes the Wayland native-key cache entry when its DRI drawable is
+destroyed, without destroying or waiting on GPU resources at that point.
+The existing resource reference counts still control swapchain destruction.
+Delayed destruction removes a cache entry only if it belongs to the exact
+displaytarget being destroyed; it must not destroy a replacement registered
+under the same native address. Ordinary `MakeCurrent` unbind/rebind does not
+destroy the drawable or remove its entry. X11 and Win32 drawable teardown are
+unchanged.
+
+The isolated consumer implements real Wayland SHM buffer consumption and
+checks every pixel of each 64x64 red/green/blue frame. It is not niri and does
+not exercise Android scanout, dma-buf, explicit synchronization, or optional
+Wayland surface extensions. This is a debug-branch fix with measured SHM
+coverage, not a claim of validation across those other WSI paths. No live
+Noctalia/niri restart, panel interaction, or system-driver replacement was
+performed for this follow-up. The original callback-221 trace has the same
+stale-wrapper symptom; a full Noctalia session with this fix remains unverified.
+
+### Measured results on MT6989
+
+All passing runs report `zink Vulkan 1.4(Mali-G720-Immortalis MC12 (MESA_PANVK))`.
+`bad=0` means the consumer checked all 4096 pixels in every consumed frame,
+not merely the GL readback, a nonzero buffer, or a process exit code.
+
+| Library / scenario | Consumed frames | Bad frames | Repeated native address | Result |
+|---|---:|---:|---:|---|
+| Original, native surface recreation | 1 | 0 | 1 | Protocol error on second frame |
+| Purge-order experiment, native recreation | 1 | 0 | 1 | Same error; experiment reverted |
+| Fixed, native surface recreation | 128 | 0 | 84 | Pass |
+| Fixed, EGLSurface recreation on one native surface | 128 | 0 | 127 | Pass |
+| Fixed, same EGLSurface, MakeCurrent unbind/rebind | 128 | 0 | 127 | Pass |
+| Fixed, destroy current EGLSurface, then unbind/recreate | 128 | 0 | 84 | Pass |
+
+Raw logs are committed under `patches/debug/evidence/lifetime-*.log`.
+The original same-native EGLSurface recreation control also passes (128
+frames); the failure requires native-surface destruction/address reuse.
+
+The tested standalone AArch64 glibc library is
+`/root/panvk-wsi-debug/lifetime-fix/libgallium-26.3.0-devel.so` on the target,
+SHA-256 `5dc11b6ca6ee8f76be9b2fdb96d5913013f177ac67ca3d05efd853fc49b22715`.
+Its build-host copy is `artifacts/libgallium-lifetime.so`. Dynamic-loader
+inspection confirmed this library alongside the existing patched
+`egl-desktop/usr/lib64/libEGL.so.1`. The PanVK ICD was unchanged.
+
+### Build and run the isolated regression
+
+From this repository root, with the existing Mesa, sysroot, and EGL build:
+
+```bash
+git -C "$MESA" apply "$PWD/patches/debug/0003-zink-wayland-displaytarget-lifetime.patch"
+BUILD=/home/neurax/panvk-wsi-debug/build/cross-egl-zink-fix
+LIBS=/home/neurax/panvk-wsi-debug/artifacts/egl-zink-desktop/usr/lib64
+ninja -C "$BUILD" -j12 src/gallium/targets/dri/libgallium-26.3.0-devel.so
+aarch64-linux-gnu-strip --strip-unneeded -o libgallium-26.3.0-devel.so \
+  "$BUILD/src/gallium/targets/dri/libgallium-26.3.0-devel.so"
+aarch64-linux-gnu-gcc --sysroot="$SYSROOT" \
+  -I"$MESA/include" -isystem "$SYSROOT/usr/include" -O2 -g -Wall -Wextra \
+  patches/debug/surface-lifetime-probe.c -L"$LIBS" \
+  -Wl,-rpath-link,"$LIBS:$SYSROOT/usr/lib64" \
+  -lEGL -lGLESv2 -lwayland-client -lwayland-server -lwayland-egl \
+  -o surface-lifetime-probe
+```
+
+Stage the new Gallium library in a separate `lifetime-fix/` directory; keep
+the matching EGL/GLES runtime in `egl-desktop/` and the previously verified
+PanVK ICD in `icd/`. Do not install over `/usr/lib64`. The probe creates its
+own private socketpair/server and requires neither a desktop compositor nor
+`WAYLAND_DISPLAY`:
+
+```bash
+base=/root/panvk-wsi-debug
+for mode in recreate rebind make-current destroy-current; do
+  env -u DISPLAY -u LD_PRELOAD \
+    LD_LIBRARY_PATH="$base/lifetime-fix:$base/egl-desktop/usr/lib64" \
+    LIBGL_DRIVERS_PATH="$base/egl-desktop/usr/lib64/dri" \
+    VK_DRIVER_FILES="$base/icd/panvk-kbase-debug.json" \
+    MESA_LOADER_DRIVER_OVERRIDE=zink GALLIUM_DRIVER=zink \
+    LIBGL_KOPPER_DISABLE=0 PANVK_WSI_SHM_DIAG=1 \
+    timeout 65 "$base/ab/surface-lifetime-probe-v2" "--$mode" \
+    > "$base/logs/lifetime-v2-$mode.log" 2>&1 || exit 1
+done
+```
+
+The tested executable is named `surface-lifetime-probe-v2` to retain the
+original reproduction binary on the target; copy the freshly built probe
+to that path. Each log must end in `PASS`, `commits=128`, and `bad=0`.
+The `recreate` run must also record native address reuse to exercise the
+original collision. Omitting the `lifetime-fix` directory from
+`LD_LIBRARY_PATH` restores the previous Gallium runtime for the test process.
