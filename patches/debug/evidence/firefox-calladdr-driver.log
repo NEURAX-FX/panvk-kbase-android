@@ -1,0 +1,43 @@
+MESA: info: kbase: CSF driver, uAPI version 1.21, page_size=4096
+MESA: info: kbase: coherency mode 0 (ACE-Lite), shaderDeviceClock off (strict, PANVK_KBASE_STRICT_DEVICE_CLOCK=0 = 114), coherent pools off (PANVK_KBASE_COHERENT_POOLS=1 enables)
+MESA: info: kbase: timestamp calibration: CSF, keeping cntfrq 13000000 Hz (PANVK_KBASE_TS_CALIBRATE=1 = measure)
+MESA: info: panvk: gpu_id 0xc8700000 variant 0x4 arch v12 model Mali-G720 texture_features 0xc7fe001e 0 0 0
+MESA: info: panvk: BC emulation on, lowmem (native compressed mask 0xc7fe001e)
+WARNING: panvk is not a conformant Vulkan implementation, testing use only.
+MESA: info: kbase: CSF driver, uAPI version 1.21, page_size=4096
+MESA: info: kbase: coherency mode 0 (ACE-Lite), shaderDeviceClock off (strict, PANVK_KBASE_STRICT_DEVICE_CLOCK=0 = 114), coherent pools off (PANVK_KBASE_COHERENT_POOLS=1 enables)
+MESA: info: kbase: timestamp calibration: CSF, keeping cntfrq 13000000 Hz (PANVK_KBASE_TS_CALIBRATE=1 = measure)
+MESA: info: kbase: mem_alloc via ALLOC_EX
+MESA: info: kbase: queue_group_create layout=112 bytes, 3 CS, csi_handlers 0x1
+MESA: info: kbase: tiler heaps 4 initial / 400 max chunks of 1024 KiB
+MESA: info: kbase: tiler_heap_init layout=16 bytes
+1794328194960	Marionette	INFO	Listening on port 2829
+MESA: info: panvk: device TLS 1024 B/thread x 2048 threads x 23 core IDs (12 cores, mask 0x7700bb) = 46 MiB of VA, 24 MiB backed
+GetShaderInfoLog() ->
+0:2(12): error: extension `GL_EXT_shader_texture_lod' unsupported in fragment shader
+
+GetShaderSource() ->
+
+#extension GL_EXT_shader_texture_lod: require
+void main() {}
+
+JavaScript warning: resource://gre/modules/Troubleshoot.sys.mjs, line 748: WebGL context was lost.
+JavaScript warning: resource://gre/modules/Troubleshoot.sys.mjs, line 748: WebGL context was lost.
+JavaScript warning: data:text/html;charset=utf-8,%3C%21doctype%20html%3E%3Cmeta%20charset%3D%22utf-8%22%3E%3Ctitle%3EPanVK%20Firefox%20hardware%20validation%3C/title%3E%3Cstyle%3Ebody%7Bbackground%3A%2318304a%3Bcolor%3Awhite%3Bfont%3A24px%20sans-serif%7D%23box%7Bwidth%3A180px%3Bheight%3A90px%3Bbackground%3Alinear-gradient%2890deg%2C%23fb3%2C%235f8%29%3Bborder-radius%3A20px%3Banimation%3Aslide%202s%20infinite%20alternate%3Bfilter%3Adrop-shadow%284px%204px%206px%20%23000%29%7D%40keyframes%20slide%7Bto%7Btransform%3AtranslateX%28280px%29%20rotate%2820deg%29%7D%7Dcanvas%7Bborder%3A5px%20solid%20white%7Dsection%7Bheight%3A90px%7D%3C/style%3E%3Ch1%3EFirefox%20%2B%20Zink%20%2B%20PanVK%3C/h1%3E%3Cdiv%20id%3D%22box%22%3E%3C/div%3E%3Cp%20id%3D%22status%22%3E%3C/p%3E%3Ccanvas%20id%3D%22gpu%22%20width%3D%22256%22%20height%3D%22128%22%3E%3C/canvas%3E%3Cscript%3Ewindow.framesDrawn%3D0%3Bwindow.badPixels%3D0%3Bwindow.gpu%3Ddocument.getElementById%28%27gpu%27%29.getContext%28%27webgl2%27%29%3Bif%28window.gpu%29%7Bconst%20gl%3Dwindow.gpu%3Bconst%20dbg%3Dgl.getExtension%28%27WEBGL_debug_renderer_info%27%29%3Bwindow.renderer%3Ddbg%3Fgl.getParameter%28dbg.UNMASKED_RENDERER_WEBGL%29%3Agl.getParameter%28gl.RENDERER%29%3Bfunction%20draw%28%29%7Bconst%20red%3DframesDrawn%252%3Bgl.clearColor%28red%2C1-red%2C0%2C1%29%3Bgl.clear%28gl.COLOR_BUFFER_BIT%29%3Bconst%20p%3Dnew%20Uint8Array%284%29%3Bgl.readPixels%2864%2C64%2C1%2C1%2Cgl.RGBA%2Cgl.UNSIGNED_BYTE%2Cp%29%3Bif%28p%5B0%5D%21%3D%3Dred%2A255%7C%7Cp%5B1%5D%21%3D%3D255-red%2A255%7C%7Cp%5B2%5D%21%3D%3D0%7C%7Cp%5B3%5D%21%3D%3D255%29badPixels%2B%2B%3BframesDrawn%2B%2B%3Bdocument.getElementById%28%27status%27%29.textContent%3D%27GPU%20frames%20%27%2BframesDrawn%2B%27%20/%20bad%20pixels%20%27%2BbadPixels%3BrequestAnimationFrame%28draw%29%7Ddraw%28%29%7D%3C/script%3E, line 1: WEBGL_debug_renderer_info is deprecated in Firefox and will be removed. Please use RENDERER.
+MESA: info: kbase: mem_import via MEM_IMPORT (24 bytes)
+GetShaderInfoLog() ->
+0:2(12): error: extension `GL_EXT_shader_texture_lod' unsupported in fragment shader
+
+GetShaderSource() ->
+
+#extension GL_EXT_shader_texture_lod: require
+void main() {}
+
+JavaScript warning: resource://gre/modules/Troubleshoot.sys.mjs, line 748: WebGL context was lost.
+JavaScript warning: resource://gre/modules/Troubleshoot.sys.mjs, line 748: WebGL context was lost.
+Exiting due to channel error.
+Exiting due to channel error.
+Exiting due to channel error.
+Exiting due to channel error.
+Exiting due to channel error.
+Exiting due to channel error.

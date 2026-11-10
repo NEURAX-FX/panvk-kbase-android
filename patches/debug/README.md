@@ -728,3 +728,125 @@ manager environment. Versioned libraries remain installed. Its shell syntax
 was checked; rollback was not executed after deployment. Restart graphics
 applications and log in again after rollback. Existing shells can instead
 load the new deployment now with `. /etc/profile.d/90-panvk-zink.sh`.
+
+## Firefox CSF call-address truncation (2026-11-11)
+
+Firefox 159.0.1 on the MT6989 target failed at startup with CSF group fatal
+status `0x7d0002c1`, sideband `0x00000000fffee000`, then queue timeouts and
+`zink: DEVICE LOST!`. Exception `0xc1` is `TRANSLATION_FAULT_L1`, not fd
+exhaustion. An isolated diagnostic with `PANVK_TLS_SPARSE=0` still hit the
+same fault; sparse TLS was not changed by this fix.
+
+The user identified [issue #9](https://github.com/wonderkast02/panvk-g720-kbase-csf/issues/9).
+Its [root-cause correction](https://github.com/wonderkast02/panvk-g720-kbase-csf/issues/9#issuecomment-5977983155)
+describes the same fault signature. The locally reconstructed p0175 source
+still had the defect in `get_fb_descs()`:
+
+```c
+uint32_t fn_addr = dev->draw_ctx->fns_bo->addr.dev + fn_idx * fn_stride;
+cs_move64_to(b, addr_reg, fn_addr);
+```
+
+The provoking-vertex helper path truncates a 64-bit GPU function address
+before loading it into a 64-bit CS register. kbase uses high SAME_VA GPU
+addresses, so CS CALL can jump to an unmapped low address. This path is used
+when framebuffer descriptors are allocated before provoking-vertex mode is
+known; successful gears tests did not establish coverage of that path.
+
+`0005-panvk-csf-helper-address-width.patch` changes only `fn_addr` to
+`uint64_t`, matching the [fix published by @emir34-34](https://github.com/emir34-34/DroidDeck/blob/mediatek-mali-support/tools/panvk/patches/0002-fix-provoking-vertex-fn-address-truncation.patch).
+No queue throttling, synchronization-scope changes, software rendering, or
+TLS-layout override is part of the fix. Existing WSI, surface-lifetime and
+sync-fd fixes remain applied.
+
+Build the same reconstructed Mesa tree after applying patch 0005:
+
+```bash
+ninja -C build/cross-panvk-wayland-final -j12 \
+  src/panfrost/vulkan/libvulkan_panfrost.so
+aarch64-linux-gnu-strip --strip-unneeded \
+  -o artifacts/libvulkan_panfrost-calladdr.so \
+  build/cross-panvk-wayland-final/src/panfrost/vulkan/libvulkan_panfrost.so
+```
+
+The rebuilt library passed `file`, `readelf -h`, `readelf -d`, and
+`readelf --version-info`: ELF64 AArch64, glibc (maximum required version
+`GLIBC_2.38`), Wayland/X11 dependencies, no Bionic dependencies. Patch 0005
+passed reverse application checking against the edited source.
+
+Standalone artifact: `artifacts/panvk-calladdr-aarch64.tar.zst`, containing
+the ICD and relative `panvk-calladdr.json` manifest.
+
+```text
+ICD SHA-256: cc9041bebad2eab642fe2c4f408d3b2aaa46aa0307487c06d02948c87af6eb50
+Archive SHA-256: d1a68249a57ce606ab5888f796e7a48e80013488330d502558634e87b7de952c
+```
+
+### Hardware validation and installation
+
+With the isolated fixed ICD and the original default sparse-TLS setting,
+native Firefox 159.0.1 initialized on `wayland-1`. Its privileged graphics
+snapshot reported `windowProtocol=wayland`, `windowLayerManagerType=WebRender`,
+`numAcceleratedWindows=1`, and Zink/Mali-G720/MESA_PANVK for the adapter and
+both WebGL renderers. No graphics acceleration or sandbox preference was
+disabled. A disposable profile left the user's existing profile untouched.
+
+A local page exercised CSS transforms/gradients/shadows and a WebGL2 canvas
+for 60 seconds. It rendered 954 frames with zero readback pixel mismatches and
+no context loss; all six samples advanced. Browser diagnostics still showed
+hardware WebRender afterward. The browser mapped the fixed ICD and its log
+contained no CSF fatal error, subqueue timeout, or `DEVICE LOST`. Its captured
+page visibly contains the gradient/shadow and colored WebGL canvas, retained
+at `/root/panvk-wsi-debug/logs/firefox-calladdr-isolated.png`.
+
+The temporary automation needed three harness corrections, not driver changes:
+this Firefox requires `MOZ_REMOTE_ALLOW_SYSTEM_ACCESS=1` for privileged
+Marionette diagnostics; page globals must be accessed through its Xray wrapper;
+and the web-exposed renderer string is `Mali-T760, or similar`, so hardware
+identity was checked using privileged graphics diagnostics and process maps,
+not that web-facing string. The diagnostic access environment was restricted
+to the disposable test process and was not installed globally.
+
+`/opt/panvk/current` now selects `/opt/panvk/calladdr-cc9041be`. This directory
+contains the new ICD and byte-for-byte copies of the previously deployed
+EGL/GBM/Gallium components. Existing default Zink settings and manifests are
+unchanged. The previous version remains available. Running niri/Noctalia were
+not restarted; new application processes use the new ICD.
+
+Reproduce the original application path with the installed defaults:
+
+```sh
+WAYLAND_DISPLAY=wayland-1 firefox
+```
+
+For an isolated profile, create a separate directory and launch with
+`firefox --no-remote --profile /absolute/path/to/profile`. Check `about:support`
+for Wayland, hardware WebRender and MESA_PANVK, not merely process survival.
+An isolated ICD override must also unset `VK_LOADER_DRIVERS_SELECT`, since the
+global default selects the filename `panvk-kbase.json`.
+
+Evidence in `patches/debug/evidence/`:
+
+- `firefox-calladdr-before.log`: old ICD still faults with full TLS allocation.
+- `firefox-calladdr-after.log`: graphics snapshots, six pixel samples and maps.
+- `firefox-calladdr-driver.log`: fixed ICD's application log.
+
+Rollback to the immediately previous driver selection:
+
+```sh
+sh /root/panvk-wsi-debug/backup-calladdr-cc9041be/rollback.sh
+```
+
+This restores the `e7bfef6-gbm` selector and refreshes the linker cache; restart
+affected applications afterward. The script was syntax-checked but not executed
+after the successful cutover. It retains default Zink and both versioned stacks.
+
+The installed-default path was then exercised separately for 10 seconds, with
+neither `VK_DRIVER_FILES` nor `VK_ICD_FILENAMES` set and the normal
+`VK_LOADER_DRIVERS_SELECT=panvk-kbase.json` selection intact. Native Wayland,
+hardware WebRender and MESA_PANVK WebGL2 checks passed; 11 animation frames had
+zero pixel mismatches and no context loss. Process maps resolved EGL, Gallium
+and the ICD to `/opt/panvk/calladdr-cc9041be/lib64/`.
+`evidence/firefox-calladdr-default.log` retains this separate verification.
+These short runs establish the startup/rendering fix, not long-duration
+stability or a performance benchmark.
