@@ -1,0 +1,5 @@
+Niri-Anland compositor PID 4855, recorded before ending the dedicated smoke session.
+Mapped graphics libraries:
+/opt/panvk/calladdr-cc9041be/lib64/libvulkan_panfrost.so
+/opt/panvk/calladdr-cc9041be/lib64/libgallium-26.3.0-devel.so
+/opt/panvk/calladdr-cc9041be/lib64/libEGL_mesa.so.0.0.0

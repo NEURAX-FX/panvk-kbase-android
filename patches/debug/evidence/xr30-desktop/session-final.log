@@ -1,0 +1,12 @@
+Process started with PID 10260 (shell: /bin/bash)
+Initial output:
+OWNED_SESSION_PROCESSES_AFTER_QUIT
+  PID  PPID STAT COMMAND
+OWNED_NIRI_AND_XWAYLAND_EXITED
+TEST_CLIENTS
+REMOVED_OWNED_SMOKE_SCRIPTS_AND_PROFILE
+
+✅ Process 10260 has finished execution
+
+
+[executed on device: MT6989-DS (0b072e10-6c14-487c-b0bb-06323b8bd3b7)]

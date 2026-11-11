@@ -1023,6 +1023,30 @@ The positive SHM10 fixture adds **both XR30 and AR30** because the current
 WSI's enumeration requires alpha and opaque variants; it does not advertise
 XR30 in the negative SHM8 fixture.
 
+### Live desktop follow-up
+
+The target's isolated `xr30-run` launcher exports the runtime/ICD variables
+shown above and clears `DISPLAY` and `LD_PRELOAD`. With a live Niri session,
+the application entry points used for the desktop follow-up were:
+
+```sh
+base=/root/panvk-wsi-debug/xr30
+export XDG_RUNTIME_DIR=/run/user/0 WAYLAND_DISPLAY=wayland-1
+"$base/xr30-run" env DISPLAY=:0 eglinfo -B
+"$base/xr30-run" glmark2-es2-wayland -b build:duration=8:use-vbo=false --size=640x480
+"$base/xr30-run" blender --factory-startup --gpu-backend opengl --window-geometry 0 0 800 600
+"$base/xr30-run" env -u WAYLAND_DISPLAY -u WAYLAND_SOCKET DISPLAY=:0 \
+  blender --factory-startup --gpu-backend opengl --window-geometry 0 0 800 600
+```
+
+The Blender smoke additionally opened a second 3D Viewport, captured both
+windows, closed the second window and quit. Firefox used a temporary profile
+with native Wayland enabled, two WebGL canvases with RGB bands, band-centre
+`readPixels` checks, and a privileged graphics snapshot. Four samples were
+taken two seconds apart. All captures came from Niri's `screenshot-window`.
+Temporary automation scripts and the Firefox profile were removed afterward;
+the isolated runtime and the recorded evidence were retained.
+
 ### Measured results and limits
 
 | Case | Result | Evidence |
@@ -1033,8 +1057,11 @@ XR30 in the negative SHM8 fixture.
 | Vulkan, DMA-BUF10 + SHM8 | PASS: queried formats 44/50 only; forced format 58 returns -3 without a buffer request; format 44 then succeeds on the same surface/connection | `evidence/xr30-vulkan-8-mixed.log` |
 | Vulkan, SHM10 | PASS: format 58 enumerated; XR30 swapchain and subsequent 8-bit swapchain create successfully | `evidence/xr30-vulkan-10-shm.log` |
 | eglinfo GBM/Surfaceless | PASS: EGL 1.5, PanVK/Zink OpenGL 4.6 core/compatibility and GLES 3.2 | `evidence/xr30-eglinfo.log` |
-| eglinfo Wayland/X11 | FAILED initialization in the unavailable desktop environment; combined eglinfo exit 2 | Same log |
-| Blender native Wayland, Blender XWayland, Firefox WebRender/WebGL | NOT TESTED: no running Niri/Xwayland session; compositor deliberately not started/restarted | No application success claim |
+| eglinfo Wayland/X11, desktop follow-up | PASS: EGL 1.5, PanVK/Zink OpenGL 4.6 core/compatibility and GLES 3.2; GBM and Surfaceless also pass | `evidence/xr30-desktop/eglinfo.log` |
+| glmark2 native Wayland | PASS: visible model in compositor capture, 640×480, GLES 3.2, 8-second build scene; process exit 0 | `evidence/xr30-desktop/glmark-wayland.log`, `glmark-capture.log`, `glmark-wayland.png` |
+| Blender native Wayland | PASS: OpenGL/Zink main window and second viewport rendered; second window closed; application quit normally | `evidence/xr30-desktop/blender-wayland.log`, `blender-wayland-primary-0.png`, `blender-wayland-two-windows-0.png` |
+| Blender XWayland | PASS: main window and second viewport rendered; second window closed; application quit normally; system Zink 26.2.6 with new PanVK ICD | `evidence/xr30-desktop/blender-xwayland.log`, `blender-xwayland-primary-0.png`, `blender-xwayland-two-windows-1.png` |
+| Firefox native Wayland | PASS: hardware WebRender, WebGL1 and WebGL2 on MESA_PANVK; four samples over approximately 8 seconds, final frame count 10, zero bad pixels/GL errors, page contexts not lost; normal exit | `evidence/xr30-desktop/firefox-check.log`, `firefox-driver.log`, `firefox-wayland.png` |
 
 Both rendered EGL cases used a real OpenGL 4.6 core context and reported
 `zink Vulkan 1.4(Mali-G720-Immortalis MC12 (MESA_PANVK))`. The Vulkan-only probe
@@ -1044,12 +1071,37 @@ to SHM EGL and failed the pbuffer assertion; those issues were diagnosed and
 corrected before the four passing runs. No full Blender rendering or
 long-duration stability claim follows from these short probes.
 
+The desktop follow-up started a Niri-Anland/XWayland session for these checks;
+the earlier unavailable-session failures remain in `evidence/xr30-eglinfo.log`.
+The native Wayland applications' process maps identify the isolated
+`/root/panvk-wsi-debug/xr30/runtime/usr/lib64` EGL, Gallium and PanVK libraries.
+Blender XWayland instead used system GLX/Zink 26.2.6 with the isolated PanVK ICD:
+that result does not validate a new GLX build. The screenshots are actual Niri
+window captures, not independently captured Android scanout. No llvmpipe
+fallback was used for these application checks.
+The compositor retained the existing GPU stack under
+`/opt/panvk/calladdr-cc9041be/lib64`; `evidence/xr30-desktop/niri-maps.log`
+records its PanVK, Zink and EGL mappings. The test did not replace the
+compositor's working libraries with the XR30 candidate.
+
+The dedicated session was closed after checking that Niri had no windows.
+The quit IPC client reported EOF; a subsequent process check confirmed that
+the Niri launcher, Niri, xwayland-satellite, XWayland and test applications had
+exited. Both the request output and the final check are preserved in
+`evidence/xr30-desktop/session-cleanup.log` and `session-final.log`.
+
+Firefox's graphics snapshot additionally emitted unsupported-extension probe
+errors and `Troubleshoot.sys.mjs` context-lost warnings, preserved verbatim in
+`firefox-driver.log`; the test page's four samples all reported `lost: false`.
+The recorded frame count is not a performance measurement. WebGPU, video decode,
+full Blender scene rendering and long-duration stability are outside this smoke
+test's coverage.
+
 The fix is technically generic to Mesa EGL/Kopper/Wayland WSI and can be
 proposed upstream as separate capability-negotiation and SHM-safety changes;
 it contains no PanVK/compositor-name blacklist. No upstream MR was opened.
-Actual native DMA-BUF10 presentation, XWayland rendering, alpha-only format
-sets, wl_fixes-v2 global-removal events, non-Zink builds and rare query-error
-paths have not been runtime-validated here. The DMA-BUF WSI branch and PanVK
-CSF/synchronization are unchanged. These limits must accompany any upstream
-proposal or wider deployment.
+Actual native DMA-BUF10 presentation, alpha-only format sets, wl_fixes-v2
+global-removal events, non-Zink builds and rare query-error paths have not been
+runtime-validated here. The DMA-BUF WSI branch and PanVK CSF/synchronization are
+unchanged. These limits must accompany any upstream proposal or wider deployment.
 

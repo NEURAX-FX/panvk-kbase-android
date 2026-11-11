@@ -1,0 +1,5 @@
+WINDOW [{"id": 3, "title": "glmark2", "app_id": "com.github.glmark2.glmark2", "pid": 6701, "workspace_id": 1, "is_focused": true, "is_floating": false, "is_urgent": false, "layout": {"pos_in_scrolling_layout": [1, 1], "tile_size": [640.0, 480.0], "window_size": [640, 480], "tile_pos_in_workspace_view": null, "window_offset_in_tile": [0.0, 0.0]}, "focus_timestamp": {"secs": 46684, "nanos": 250877879}}]
+MAPS /root/panvk-wsi-debug/xr30/runtime/usr/lib64/libEGL_mesa.so.0.0.0
+/root/panvk-wsi-debug/xr30/runtime/usr/lib64/libgallium-26.3.0-devel.so
+/root/panvk-wsi-debug/xr30/runtime/usr/lib64/libvulkan_panfrost.so
+GLMARK_EXIT 0

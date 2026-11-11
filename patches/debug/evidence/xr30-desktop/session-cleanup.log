@@ -1,0 +1,12 @@
+Process started with PID 10046 (shell: /bin/bash)
+Initial output:
+WINDOWS_BEFORE_QUIT=[]
+Error: error communicating with niri
+
+Caused by:
+    EOF while parsing a value at line 1 column 0
+
+✅ Process 10046 has finished execution
+
+
+[executed on device: MT6989-DS (0b072e10-6c14-487c-b0bb-06323b8bd3b7)]
