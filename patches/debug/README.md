@@ -21,6 +21,13 @@ Build the **ARM64 glibc Wayland ICD**, not the stock Android/Bionic build
 cannot reproduce this Wayland issue). Rebuild and install the debug ICD
 without overwriting the known-good system driver.
 
+**MT6989 delivery policy (user instruction, 2026-11-11):** after a bug fix
+passes isolated device validation, deploy it as the device's default graphics
+stack and verify a fresh process through the normal default selectors. Do not
+stop at a test-only launcher. Keep the previous version and a rollback command;
+preserve Fedora GLVND dispatch libraries and do not restart an active user
+desktop without permission. Failed or unverified candidates stay isolated.
+
 Then reproduce with the *new* ICD:
 
 ```bash
@@ -950,14 +957,16 @@ The new ICD, Gallium, EGL and probe were checked with `file`, `readelf -h`,
 no Android/Bionic dependency or host-library runtime search path. Full output
 is retained locally at `artifacts/xr30-elf-check.log`.
 
-The tested directory is `/root/panvk-wsi-debug/xr30/runtime/usr/lib64`.
-`/opt/panvk/current` remains the prior `calladdr-cc9041be` stack; no system
-manifest, default selector, kernel or compositor was changed. The test launcher
-`/root/panvk-wsi-debug/xr30/xr30-run` selects only that directory via
+The initially tested directory was `/root/panvk-wsi-debug/xr30/runtime/usr/lib64`.
+During isolated validation, `/opt/panvk/current` remained the prior
+`calladdr-cc9041be` stack; no system manifest, default selector, kernel or
+compositor was changed. The test launcher `/root/panvk-wsi-debug/xr30/xr30-run`
+selects only that directory via
 `LD_LIBRARY_PATH`, an independent GLVND vendor JSON, and an independent
 `panvk-kbase.json`. The manifest name retains compatibility with the installed
-`VK_LOADER_DRIVERS_SELECT=panvk-kbase.json` selection. Ending the test process
-is the rollback; there was no default installation to undo.
+`VK_LOADER_DRIVERS_SELECT=panvk-kbase.json` selection. Ending those isolated
+test processes was their rollback. The subsequent default installation below
+supersedes that test-only deployment status.
 
 ### Reproducible controlled regression
 
@@ -1104,4 +1113,60 @@ Actual native DMA-BUF10 presentation, alpha-only format sets, wl_fixes-v2
 global-removal events, non-Zink builds and rare query-error paths have not been
 runtime-validated here. The DMA-BUF WSI branch and PanVK CSF/synchronization are
 unchanged. These limits must accompany any upstream proposal or wider deployment.
+
+## XR30 installed as the device default (2026-11-11)
+
+At the user's request, validated fixes are now delivered with device-default
+installation and a fresh default-path check, not just an isolated test launcher.
+The existing XR30 fix from `39e82f3` has been promoted accordingly:
+
+- `/opt/panvk/current` now points to `/opt/panvk/xr30-39e82f3`.
+- Its PanVK and Gallium libraries are byte-identical to the cross-built XR30
+  artifacts validated above. The complete matching EGL/GBM/DRI stack is included.
+- As in the previous default deployment, installed EGL uses RPATH `$ORIGIN`,
+  and the GBM backend/DRI module use `$ORIGIN/..`. This removes dependence on
+  the test launcher's `LD_LIBRARY_PATH`; the three RPATH-adjusted files have
+  their installed hashes recorded in `evidence/xr30-default/default-install.log`.
+- The existing EGL/Vulkan manifests, canonical environment, profile hook and
+  linker configuration were unchanged. Their hashes and the Fedora GLVND
+  dispatch-library hashes were checked after the atomic symlink switch and
+  `ldconfig`. No system GLVND library was overwritten.
+- The prior `/opt/panvk/calladdr-cc9041be` directory remains available. Niri
+  PID 12138 was preserved throughout; already-running applications retain
+  their old library mappings. New default-launched applications use XR30.
+
+Verification ran from `env -i ... /bin/bash -lc` with the normal login policy.
+`LD_LIBRARY_PATH`, `LD_PRELOAD`, `VK_DRIVER_FILES`, `VK_ICD_FILENAMES` and
+`__EGL_VENDOR_LIBRARY_FILENAMES` were all unset:
+
+- `wayland-format-probe egl 8 mixed`: RGB8 window, RGB10 pbuffer retained,
+  zero XR30 SHM requests, correct red/green pixels, zero Wayland errors.
+- `wayland-format-probe egl 10 shm`: RGB10 window, eight XR30 buffers,
+  correct red/green pixels, zero Wayland errors.
+- `wayland-format-probe vulkan 8 mixed`: unsupported XR30 rejected with -3
+  before any buffer request; the supported 8-bit swapchain then succeeded.
+- A fresh 320×240 native Wayland glmark2 window rendered the build model for
+  five seconds and exited normally. Its process maps identify EGL, Gallium,
+  GBM and PanVK under `/opt/panvk/xr30-39e82f3/lib64`, without `xr30-run`.
+  The actual Niri window capture was visually checked.
+
+Evidence: `evidence/xr30-default/default-verify.log`, `default-glmark.log`
+and `default-glmark.png`. These are short default-selection checks, not a
+new long-duration stability or compositor-restart validation. `ldconfig`
+reported `/lib64/libvulkan_wrapper.so is not a symbolic link`; it exited
+successfully, and the loaded ICD path above confirms the intended selection.
+
+Configuration backups and the guarded rollback script are retained at
+`/root/panvk-wsi-debug/backup-xr30-39e82f3`. Restore the immediately previous
+default with:
+
+```sh
+sh /root/panvk-wsi-debug/backup-xr30-39e82f3/rollback.sh
+```
+
+The script switches `current` back to `calladdr-cc9041be` and refreshes the
+linker cache; it refuses to overwrite an unexpected newer selection. Its shell
+syntax was checked, but rollback was not executed after the passing deployment.
+Restart affected applications after rollback. Temporary deployment/verification
+scripts were removed; the versioned stacks, logs, capture and rollback remain.
 

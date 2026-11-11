@@ -1,0 +1,107 @@
+LOGIN_DEFAULTS {"MESA_LOADER_DRIVER_OVERRIDE": "zink", "GALLIUM_DRIVER": "zink", "VK_LOADER_DRIVERS_SELECT": "panvk-kbase.json", "LIBGL_DRIVERS_PATH": "/opt/panvk/current/lib64/dri", "GBM_BACKENDS_PATH": "/opt/panvk/current/lib64/gbm"}
+NO_TEST_LIBRARY_OR_ICD_OVERRIDES
+DEFAULT_PROBE ('egl', '8', 'mixed') EXIT 0
+MESA: info: kbase: CSF driver, uAPI version 1.21, page_size=4096
+MESA: info: kbase: coherency mode 0 (ACE-Lite), shaderDeviceClock off (strict, PANVK_KBASE_STRICT_DEVICE_CLOCK=0 = 114), coherent pools off (PANVK_KBASE_COHERENT_POOLS=1 enables)
+MESA: info: kbase: timestamp calibration: CSF, keeping cntfrq 13000000 Hz (PANVK_KBASE_TS_CALIBRATE=1 = measure)
+MESA: info: panvk: gpu_id 0xc8700000 variant 0x4 arch v12 model Mali-G720 texture_features 0xc7fe001e 0 0 0
+MESA: info: panvk: BC emulation on, lowmem (native compressed mask 0xc7fe001e)
+WARNING: panvk is not a conformant Vulkan implementation, testing use only.
+MESA: info: kbase: CSF driver, uAPI version 1.21, page_size=4096
+MESA: info: kbase: coherency mode 0 (ACE-Lite), shaderDeviceClock off (strict, PANVK_KBASE_STRICT_DEVICE_CLOCK=0 = 114), coherent pools off (PANVK_KBASE_COHERENT_POOLS=1 enables)
+MESA: info: kbase: timestamp calibration: CSF, keeping cntfrq 13000000 Hz (PANVK_KBASE_TS_CALIBRATE=1 = measure)
+MESA: info: kbase: mem_alloc via ALLOC_EX
+MESA: info: kbase: queue_group_create layout=112 bytes, 3 CS, csi_handlers 0x1
+MESA: info: kbase: tiler heaps 4 initial / 400 max chunks of 1024 KiB
+MESA: info: kbase: tiler_heap_init layout=16 bytes
+EGL_SELECTED rgba=8/8/8/0 surface_types=5
+GL_RENDERER=zink Vulkan 1.4(Mali-G720-Immortalis MC12 (MESA_PANVK))
+SHM_CREATE format=00000001
+SHM_CREATE format=00000001
+SHM_CREATE format=00000001
+SHM_CREATE format=00000001
+CONSUMER format=00000001 pixel=ffff0000 bad=0
+GL_RENDERER=zink Vulkan 1.4(Mali-G720-Immortalis MC12 (MESA_PANVK))
+SHM_CREATE format=00000001
+SHM_CREATE format=00000001
+SHM_CREATE format=00000001
+SHM_CREATE format=00000001
+CONSUMER format=00000001 pixel=ff00ff00 bad=0
+EGL_PBUFFER rgb=10/10/10 surface_types=1
+PASS api=egl shm=8 dmabuf10=1 buffers=8 xr30=0 commits=2 bad=0 wl_error=0
+
+DEFAULT_PROBE ('egl', '10', 'shm') EXIT 0
+MESA: info: kbase: CSF driver, uAPI version 1.21, page_size=4096
+MESA: info: kbase: coherency mode 0 (ACE-Lite), shaderDeviceClock off (strict, PANVK_KBASE_STRICT_DEVICE_CLOCK=0 = 114), coherent pools off (PANVK_KBASE_COHERENT_POOLS=1 enables)
+MESA: info: kbase: timestamp calibration: CSF, keeping cntfrq 13000000 Hz (PANVK_KBASE_TS_CALIBRATE=1 = measure)
+MESA: info: panvk: gpu_id 0xc8700000 variant 0x4 arch v12 model Mali-G720 texture_features 0xc7fe001e 0 0 0
+MESA: info: panvk: BC emulation on, lowmem (native compressed mask 0xc7fe001e)
+WARNING: panvk is not a conformant Vulkan implementation, testing use only.
+MESA: info: kbase: CSF driver, uAPI version 1.21, page_size=4096
+MESA: info: kbase: coherency mode 0 (ACE-Lite), shaderDeviceClock off (strict, PANVK_KBASE_STRICT_DEVICE_CLOCK=0 = 114), coherent pools off (PANVK_KBASE_COHERENT_POOLS=1 enables)
+MESA: info: kbase: timestamp calibration: CSF, keeping cntfrq 13000000 Hz (PANVK_KBASE_TS_CALIBRATE=1 = measure)
+MESA: info: kbase: mem_alloc via ALLOC_EX
+MESA: info: kbase: queue_group_create layout=112 bytes, 3 CS, csi_handlers 0x1
+MESA: info: kbase: tiler heaps 4 initial / 400 max chunks of 1024 KiB
+MESA: info: kbase: tiler_heap_init layout=16 bytes
+MESA: info: kbase: CSF driver, uAPI version 1.21, page_size=4096
+MESA: info: kbase: coherency mode 0 (ACE-Lite), shaderDeviceClock off (strict, PANVK_KBASE_STRICT_DEVICE_CLOCK=0 = 114), coherent pools off (PANVK_KBASE_COHERENT_POOLS=1 enables)
+MESA: info: kbase: timestamp calibration: CSF, keeping cntfrq 13000000 Hz (PANVK_KBASE_TS_CALIBRATE=1 = measure)
+MESA: info: panvk: gpu_id 0xc8700000 variant 0x4 arch v12 model Mali-G720 texture_features 0xc7fe001e 0 0 0
+MESA: info: panvk: BC emulation on, lowmem (native compressed mask 0xc7fe001e)
+WARNING: panvk is not a conformant Vulkan implementation, testing use only.
+MESA: info: kbase: CSF driver, uAPI version 1.21, page_size=4096
+MESA: info: kbase: coherency mode 0 (ACE-Lite), shaderDeviceClock off (strict, PANVK_KBASE_STRICT_DEVICE_CLOCK=0 = 114), coherent pools off (PANVK_KBASE_COHERENT_POOLS=1 enables)
+MESA: info: kbase: timestamp calibration: CSF, keeping cntfrq 13000000 Hz (PANVK_KBASE_TS_CALIBRATE=1 = measure)
+MESA: info: kbase: mem_alloc via ALLOC_EX
+MESA: info: kbase: queue_group_create layout=112 bytes, 3 CS, csi_handlers 0x1
+MESA: info: kbase: tiler heaps 4 initial / 400 max chunks of 1024 KiB
+MESA: info: kbase: tiler_heap_init layout=16 bytes
+EGL_SELECTED rgba=10/10/10/0 surface_types=5
+GL_RENDERER=zink Vulkan 1.4(Mali-G720-Immortalis MC12 (MESA_PANVK))
+SHM_CREATE format=30335258
+SHM_CREATE format=30335258
+SHM_CREATE format=30335258
+SHM_CREATE format=30335258
+CONSUMER format=30335258 pixel=fff00000 bad=0
+GL_RENDERER=zink Vulkan 1.4(Mali-G720-Immortalis MC12 (MESA_PANVK))
+SHM_CREATE format=30335258
+SHM_CREATE format=30335258
+SHM_CREATE format=30335258
+SHM_CREATE format=30335258
+CONSUMER format=30335258 pixel=c00ffc00 bad=0
+EGL_PBUFFER rgb=10/10/10 surface_types=5
+PASS api=egl shm=10 dmabuf10=0 buffers=8 xr30=8 commits=2 bad=0 wl_error=0
+
+DEFAULT_PROBE ('vulkan', '8', 'mixed') EXIT 0
+MESA: info: kbase: CSF driver, uAPI version 1.21, page_size=4096
+MESA: info: kbase: coherency mode 0 (ACE-Lite), shaderDeviceClock off (strict, PANVK_KBASE_STRICT_DEVICE_CLOCK=0 = 114), coherent pools off (PANVK_KBASE_COHERENT_POOLS=1 enables)
+MESA: info: kbase: timestamp calibration: CSF, keeping cntfrq 13000000 Hz (PANVK_KBASE_TS_CALIBRATE=1 = measure)
+MESA: info: panvk: gpu_id 0xc8700000 variant 0x4 arch v12 model Mali-G720 texture_features 0xc7fe001e 0 0 0
+MESA: info: panvk: BC emulation on, lowmem (native compressed mask 0xc7fe001e)
+WARNING: panvk is not a conformant Vulkan implementation, testing use only.
+VK_DEVICE=Mali-G720-Immortalis MC12
+VK_FORMAT format=50 colorspace=0
+VK_FORMAT format=44 colorspace=0
+VK_FORMAT format=50 colorspace=1000104013
+VK_FORMAT format=44 colorspace=1000104013
+MESA: info: kbase: CSF driver, uAPI version 1.21, page_size=4096
+MESA: info: kbase: coherency mode 0 (ACE-Lite), shaderDeviceClock off (strict, PANVK_KBASE_STRICT_DEVICE_CLOCK=0 = 114), coherent pools off (PANVK_KBASE_COHERENT_POOLS=1 enables)
+MESA: info: kbase: timestamp calibration: CSF, keeping cntfrq 13000000 Hz (PANVK_KBASE_TS_CALIBRATE=1 = measure)
+MESA: info: kbase: mem_alloc via ALLOC_EX
+MESA: info: kbase: queue_group_create layout=112 bytes, 3 CS, csi_handlers 0x1
+MESA: info: kbase: tiler heaps 4 initial / 400 max chunks of 1024 KiB
+MESA: info: kbase: tiler_heap_init layout=16 bytes
+VK_CREATE format=58 colorspace=0 mode=2 advertised=0
+VK_CREATE_RESULT=-3
+SHM_CREATE format=00000001
+SHM_CREATE format=00000001
+SHM_CREATE format=00000001
+SHM_CREATE format=00000001
+PASS api=vulkan shm=8 dmabuf10=1 buffers=4 xr30=0 commits=0 bad=0 wl_error=0
+
+DEFAULT_GRAPHICS_MAPS ["/opt/panvk/xr30-39e82f3/lib64/libEGL_mesa.so.0.0.0", "/opt/panvk/xr30-39e82f3/lib64/libgallium-26.3.0-devel.so", "/opt/panvk/xr30-39e82f3/lib64/libgbm.so.1.0.0", "/opt/panvk/xr30-39e82f3/lib64/libvulkan_panfrost.so"]
+DEFAULT_WINDOW [{"id": 5, "title": "glmark2", "app_id": "com.github.glmark2.glmark2", "pid": 14110, "workspace_id": 1, "is_focused": true, "is_floating": false, "is_urgent": false, "layout": {"pos_in_scrolling_layout": [1, 1], "tile_size": [320.0, 240.0], "window_size": [320, 240], "tile_pos_in_workspace_view": null, "window_offset_in_tile": [0.0, 0.0]}, "focus_timestamp": {"secs": 50615, "nanos": 351976578}}]
+DEFAULT_GLMARK_EXIT 0
+PRESERVED_COMPOSITOR_PID 12138
+XR30_INSTALLED_DEFAULT_PASS

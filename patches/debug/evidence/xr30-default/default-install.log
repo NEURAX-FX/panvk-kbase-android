@@ -1,0 +1,31 @@
+/root/panvk-wsi-debug/xr30/runtime/usr/lib64/libEGL_mesa.so.0.0.0: OK
+/root/panvk-wsi-debug/xr30/runtime/usr/lib64/libgallium-26.3.0-devel.so: OK
+/root/panvk-wsi-debug/xr30/runtime/usr/lib64/libvulkan_panfrost.so: OK
+/sbin/ldconfig: /lib64/libvulkan_wrapper.so is not a symbolic link
+
+/etc/opt/mt6989/graphics.env: OK
+/etc/profile.d/90-panvk-zink.sh: OK
+/etc/environment.d/90-panvk-zink.conf: OK
+/etc/ld.so.conf.d/00-panvk.conf: OK
+/etc/vulkan/icd.d/panvk-kbase.json: OK
+/usr/share/glvnd/egl_vendor.d/50_mesa.json: OK
+/usr/lib64/libEGL.so.1: OK
+/usr/lib64/libGLESv2.so.2: OK
+/usr/lib64/libOpenGL.so.0: OK
+/usr/lib64/libGLX.so.0: OK
+/usr/lib64/libGLdispatch.so.0: OK
+DEFAULT=/opt/panvk/xr30-39e82f3
+8e943cfd5dccf795c6b97cbfaf953b39e6e6baaede1db349d31c11a90995507c  /opt/panvk/xr30-39e82f3/lib64/libEGL_mesa.so.0.0.0
+9510db7cdfeb06ab91eecbdea1d488b195c70a58e33b42ee82c184b117b4cb79  /opt/panvk/xr30-39e82f3/lib64/libgallium-26.3.0-devel.so
+b54c8811a3b9f662ea9086a6ea0f37861ef570dbfed8fb747314a91a0e472520  /opt/panvk/xr30-39e82f3/lib64/libvulkan_panfrost.so
+2cc2bf976cef501d7fce101c3cb9598a6c11587e0f24657abeac0e108bdad55a  /opt/panvk/xr30-39e82f3/lib64/libgbm.so.1.0.0
+5c259743e27b4b859ffa5e8f94abc4d4dae22911828459b82cf4e4901660b689  /opt/panvk/xr30-39e82f3/lib64/gbm/dri_gbm.so
+167bbd4cb30bbe8874b52a7cebff5bc2f97888e8976a20f4a59c6dd665ee2d34  /opt/panvk/xr30-39e82f3/lib64/dri/libdril_dri.so
+RPATHS
+$ORIGIN
+$ORIGIN/..
+$ORIGIN/..
+PRESERVED_RUNNING_COMPOSITOR
+  PID                  STARTED COMMAND
+12138 Wed Nov 11 15:11:34 2026 /usr/bin/niri-anland
+DEFAULT_DEPLOYMENT_PASS
