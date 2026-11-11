@@ -1,0 +1,5 @@
+e618eb049a20518ce7d5969eff750c5969ec09e6d761c1e751ff303ddc688735  artifacts/xr30-aarch64.tar.zst
+f4280db5fcbf3716c6401463989d61061fa8bef1a26162b30b91b1825e0450d4  artifacts/xr30-aarch64/usr/lib64/libEGL_mesa.so.0.0.0
+9510db7cdfeb06ab91eecbdea1d488b195c70a58e33b42ee82c184b117b4cb79  artifacts/xr30-aarch64/usr/lib64/libgallium-26.3.0-devel.so
+b54c8811a3b9f662ea9086a6ea0f37861ef570dbfed8fb747314a91a0e472520  artifacts/xr30-aarch64/usr/lib64/libvulkan_panfrost.so
+cf2e2b1aa4f5c2d93c6b6a62af00d37892be4af209b863957c0024ee5ef98c49  artifacts/wayland-format-probe

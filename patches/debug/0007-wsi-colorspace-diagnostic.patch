@@ -1,0 +1,14 @@
+--- a/src/vulkan/wsi/wsi_common.c
++++ b/src/vulkan/wsi/wsi_common.c
+@@ -1482,9 +1482,9 @@
+          (void)ext;
+       }
+       mesa_logi("wsi: CreateSwapchain enter platform=%d minImages=%u format=%d "
+-                "extent=%ux%u usage=0x%x mode=%d flags=0x%x old=%p pNext:%s",
++                "colorspace=%d extent=%ux%u usage=0x%x mode=%d flags=0x%x old=%p pNext:%s",
+                 surface->platform, info.minImageCount, info.imageFormat,
+-                info.imageExtent.width, info.imageExtent.height,
++                info.imageColorSpace, info.imageExtent.width, info.imageExtent.height,
+                 info.imageUsage, info.presentMode, info.flags,
+                 (void *)(uintptr_t)info.oldSwapchain, chain_str);
+    }

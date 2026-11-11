@@ -1,0 +1,313 @@
+--- a/src/egl/drivers/dri2/platform_wayland.c
++++ b/src/egl/drivers/dri2/platform_wayland.c
+@@ -747,7 +747,7 @@
+       dri2_surf->format = dri2_wl_shm_format_from_visual_idx(visual_idx);
+    }
+ 
+-   if (dri2_surf->base.PresentOpaque) {
++   if (dri2_surf->base.PresentOpaque && !dri2_dpy->kopper) {
+       uint32_t opaque_fourcc =
+          dri2_wl_visuals[visual_idx].opaque_wl_drm_format;
+       int opaque_visual_idx = dri2_wl_visual_idx_from_fourcc(opaque_fourcc);
+@@ -2550,12 +2550,90 @@
+    NULL,
+ };
+ 
++struct dri2_wl_kopper_registry {
++   struct dri2_egl_display *display;
++   struct wl_compositor *compositor;
++};
++
+ static void
++kopper_registry_global(void *data, struct wl_registry *registry,
++                       uint32_t name, const char *interface, uint32_t version)
++{
++   struct dri2_wl_kopper_registry *state = data;
++   if (!strcmp(interface, wl_compositor_interface.name))
++      state->compositor =
++         wl_registry_bind(registry, name, &wl_compositor_interface, 1);
++}
++
++static void
++kopper_registry_global_remove(void *data, struct wl_registry *registry,
++                              uint32_t name)
++{
++   struct dri2_wl_kopper_registry *state = data;
++   registry_handle_global_remove(state->display, registry, name);
++}
++
++static bool
++dri2_wl_kopper_get_formats(struct dri2_egl_display *dri2_dpy, bool *supported)
++{
++   struct dri2_wl_kopper_registry state = { .display = dri2_dpy };
++   struct wl_surface *surface = NULL;
++   bool success = false;
++   static const struct wl_registry_listener listener = {
++      .global = kopper_registry_global,
++      .global_remove = kopper_registry_global_remove,
++   };
++   struct wl_registry *registry =
++      wl_display_get_registry(dri2_dpy->wl_dpy_wrapper);
++   if (!registry)
++      return false;
++   wl_registry_add_listener(registry, &listener, &state);
++   if (roundtrip(dri2_dpy) < 0 || !state.compositor)
++      goto out;
++
++   surface = wl_compositor_create_surface(state.compositor);
++   if (!surface)
++      goto out;
++
++   struct kopper_loader_info info = { .initial_swap_interval = 1 };
++   VkWaylandSurfaceCreateInfoKHR *create_info = (void *)&info.bos;
++   *create_info = (VkWaylandSurfaceCreateInfoKHR) {
++      .sType = VK_STRUCTURE_TYPE_WAYLAND_SURFACE_CREATE_INFO_KHR,
++      .display = dri2_dpy->wl_dpy,
++      .surface = surface,
++   };
++   enum pipe_format formats[ARRAY_SIZE(dri2_wl_visuals)];
++   for (unsigned i = 0; i < ARRAY_SIZE(formats); i++)
++      formats[i] = dri2_wl_visuals[i].pipe_format;
++   success = kopperQuerySurfaceFormats(dri2_dpy->dri_screen_render_gpu, &info,
++                                       ARRAY_SIZE(formats), formats, supported);
++
++out:
++   if (surface)
++      wl_surface_destroy(surface);
++   if (state.compositor)
++      wl_compositor_destroy(state.compositor);
++#ifdef WL_FIXES_INTERFACE
++   if (dri2_dpy->wl_fixes)
++      wl_fixes_destroy_registry(dri2_dpy->wl_fixes, registry);
++#endif
++   wl_registry_destroy(registry);
++   return success;
++}
++
++static bool
+ dri2_wl_add_configs_for_visuals(_EGLDisplay *disp)
+ {
+    struct dri2_egl_display *dri2_dpy = dri2_egl_display(disp);
+    unsigned int format_count[ARRAY_SIZE(dri2_wl_visuals)] = {0};
++   bool kopper_supported[ARRAY_SIZE(dri2_wl_visuals)] = {0};
+ 
++   if (dri2_dpy->kopper &&
++       !dri2_wl_kopper_get_formats(dri2_dpy, kopper_supported)) {
++      _eglError(EGL_NOT_INITIALIZED, "Failed to query Vulkan Wayland surface formats");
++      return false;
++   }
++
+    /* Try to create an EGLConfig for every config the driver declares */
+    for (unsigned i = 0; dri2_dpy->driver_configs[i]; i++) {
+       struct dri2_egl_config *dri2_conf;
+@@ -2569,7 +2647,10 @@
+          continue;
+ 
+       /* Check if the server natively supports the colour buffer format */
+-      if (!server_supports_format(&dri2_dpy->formats, idx)) {
++      if (dri2_dpy->kopper) {
++         server_supported = kopper_supported[idx];
++         format = dri2_wl_visuals[idx].pipe_format;
++      } else if (!server_supports_format(&dri2_dpy->formats, idx)) {
+          if (dri2_dpy->fd_render_gpu == dri2_dpy->fd_display_gpu) {
+             /* Not supported by the server, and we aren't doing a blit, so we
+              * can't use it. */
+@@ -2596,7 +2677,8 @@
+          config_group = 1;
+ 
+       EGLint attr_list[] = {
+-         EGL_NATIVE_VISUAL_ID, dri2_wl_visuals[idx].wl_drm_format,
++         EGL_NATIVE_VISUAL_ID,
++         dri2_dpy->kopper && !server_supported ? 0 : dri2_wl_visuals[idx].wl_drm_format,
+          EGL_CONFIG_SELECT_GROUP_EXT, config_group,
+          EGL_NONE,
+       };
+@@ -2623,6 +2705,7 @@
+                  util_format_name(dri2_wl_visuals[i].pipe_format));
+       }
+    }
++   return true;
+ }
+ 
+ static bool
+@@ -2780,7 +2863,8 @@
+       disp->Extensions.WL_create_wayland_buffer_from_image = EGL_TRUE;
+ #endif
+ 
+-   dri2_wl_add_configs_for_visuals(disp);
++   if (!dri2_wl_add_configs_for_visuals(disp))
++      goto cleanup;
+ 
+    disp->Extensions.EXT_buffer_age = EGL_TRUE;
+    disp->Extensions.EXT_swap_buffers_with_damage = EGL_TRUE;
+@@ -3271,7 +3355,8 @@
+ 
+    dri2_wl_setup_swap_interval(disp);
+ 
+-   dri2_wl_add_configs_for_visuals(disp);
++   if (!dri2_wl_add_configs_for_visuals(disp))
++      goto cleanup;
+ 
+ #ifdef HAVE_BIND_WL_DISPLAY
+    if (disp->Options.Zink && dri2_dpy->fd_render_gpu >= 0 &&
+--- a/src/gallium/drivers/zink/zink_kopper.c
++++ b/src/gallium/drivers/zink/zink_kopper.c
+@@ -153,6 +153,61 @@
+    return VK_NULL_HANDLE;
+ }
+ 
++bool
++zink_kopper_query_surface_formats(struct pipe_screen *pscreen,
++                                  const struct kopper_loader_info *info,
++                                  unsigned num_formats,
++                                  const enum pipe_format *formats,
++                                  bool *supported)
++{
++   struct zink_screen *screen = zink_screen(pscreen);
++   struct kopper_displaytarget cdt = { .info = *info };
++   VkSurfaceKHR surface = kopper_CreateSurface(screen, &cdt);
++   if (surface == VK_NULL_HANDLE)
++      return false;
++
++   VkSurfaceFormatKHR *surface_formats = NULL;
++   uint32_t count = 0;
++   VkResult result;
++   do {
++      free(surface_formats);
++      surface_formats = NULL;
++      result = VKSCR(GetPhysicalDeviceSurfaceFormatsKHR)(screen->pdev, surface,
++                                                        &count, NULL);
++      if (result != VK_SUCCESS || !count)
++         goto out;
++      surface_formats = MALLOC(sizeof(*surface_formats) * count);
++      if (!surface_formats) {
++         result = VK_ERROR_OUT_OF_HOST_MEMORY;
++         goto out;
++      }
++      result = VKSCR(GetPhysicalDeviceSurfaceFormatsKHR)(screen->pdev, surface,
++                                                        &count, surface_formats);
++   } while (result == VK_INCOMPLETE);
++   if (result != VK_SUCCESS)
++      goto out;
++
++   VkColorSpaceKHR colorspace = cdt.type == KOPPER_WAYLAND
++                                  ? VK_COLOR_SPACE_PASS_THROUGH_EXT
++                                  : VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
++   for (unsigned i = 0; i < num_formats; i++) {
++      VkFormat format = zink_get_format(screen, formats[i]);
++      supported[i] = false;
++      for (uint32_t j = 0; j < count; j++) {
++         if (surface_formats[j].format == format &&
++             surface_formats[j].colorSpace == colorspace) {
++            supported[i] = true;
++            break;
++         }
++      }
++   }
++
++out:
++   free(surface_formats);
++   VKSCR(DestroySurfaceKHR)(screen->instance, surface, NULL);
++   return result == VK_SUCCESS && count > 0;
++}
++
+ static void
+ destroy_swapchain(struct zink_screen *screen, struct kopper_swapchain *cswap)
+ {
+--- a/src/gallium/drivers/zink/zink_kopper.h
++++ b/src/gallium/drivers/zink/zink_kopper.h
+@@ -146,6 +146,13 @@
+    return pscreen;
+ }
+ 
++bool
++zink_kopper_query_surface_formats(struct pipe_screen *pscreen,
++                                  const struct kopper_loader_info *info,
++                                  unsigned num_formats,
++                                  const enum pipe_format *formats,
++                                  bool *supported);
++
+ void
+ zink_kopper_update_last_written(struct zink_resource *res);
+ 
+--- a/src/gallium/frontends/dri/kopper.c
++++ b/src/gallium/frontends/dri/kopper.c
+@@ -88,6 +88,17 @@
+    return pscreen;
+ }
+ 
++bool
++kopperQuerySurfaceFormats(struct dri_screen *screen,
++                         const struct kopper_loader_info *info,
++                         unsigned num_formats, const enum pipe_format *formats,
++                         bool *supported)
++{
++   return zink_kopper_query_surface_formats(
++      kopper_get_zink_screen(screen->base.screen), info, num_formats,
++      formats, supported);
++}
++
+ // copypasta alert
+ 
+ extern bool
+--- a/src/gallium/frontends/dri/kopper_stubs.c
++++ b/src/gallium/frontends/dri/kopper_stubs.c
+@@ -32,6 +32,15 @@
+    *width = *height = 1;
+ }
+ 
++bool
++kopperQuerySurfaceFormats(struct dri_screen *screen,
++                         const struct kopper_loader_info *info,
++                         unsigned num_formats, const enum pipe_format *formats,
++                         bool *supported)
++{
++   return false;
++}
++
+ int
+ kopperGetSyncValues(struct dri_drawable *drawable, int64_t target_msc, int64_t divisor,
+                     int64_t remainder, int64_t *ust, int64_t *msc, int64_t *sbc)
+--- a/src/gallium/frontends/dri/dri_util.h
++++ b/src/gallium/frontends/dri/dri_util.h
+@@ -42,6 +42,7 @@
+ #include "main/menums.h"
+ #include "util/xmlconfig.h"
+ #include "pipe/p_defines.h"
++#include "util/format/u_formats.h"
+ #include <stdbool.h>
+ 
+ struct pipe_screen;
+@@ -166,6 +167,11 @@
+ kopperQueryBufferAge(struct dri_drawable *drawable);
+ PUBLIC void
+ kopperQuerySurfaceSize(struct dri_drawable *drawable, int *width, int *height);
++PUBLIC bool
++kopperQuerySurfaceFormats(struct dri_screen *screen,
++                         const struct kopper_loader_info *info,
++                         unsigned num_formats, const enum pipe_format *formats,
++                         bool *supported);
+ 
+ PUBLIC void
+ driswCopySubBuffer(struct dri_drawable *drawable, int x, int y, int w, int h);
+--- a/src/vulkan/wsi/wsi_common_wayland.c
++++ b/src/vulkan/wsi/wsi_common_wayland.c
+@@ -3893,6 +3893,18 @@
+    if (result != VK_SUCCESS)
+       goto fail;
+ 
++   if (wsi_device->sw) {
++      struct wsi_wl_format *format =
++         find_format(&wsi_wl_surface->display->formats, pCreateInfo->imageFormat);
++      uint32_t flag = pCreateInfo->compositeAlpha ==
++                        VK_COMPOSITE_ALPHA_PRE_MULTIPLIED_BIT_KHR
++                        ? WSI_WL_FMT_ALPHA : WSI_WL_FMT_OPAQUE;
++      if (!format || !(format->flags & flag)) {
++         result = VK_ERROR_INITIALIZATION_FAILED;
++         goto fail;
++      }
++   }
++
+    uint32_t num_images = pCreateInfo->minImageCount;
+ 
+    /* If app provides a present mode list from KHR_swapchain_maintenance1,

@@ -850,3 +850,206 @@ and the ICD to `/opt/panvk/calladdr-cc9041be/lib64/`.
 `evidence/firefox-calladdr-default.log` retains this separate verification.
 These short runs establish the startup/rendering fix, not long-duration
 stability or a performance benchmark.
+
+## Wayland XR30 negotiation (2026-11-11)
+
+`0006-wayland-kopper-format-negotiation.patch` fixes the EGL/Kopper presentation
+capability mismatch and adds a defensive SHM-only WSI check. Apply it after the
+existing debug fixes to the same patched p0175 Mesa tree. It neither changes
+PanVK rendering/CSF/synchronization nor replaces the requested image format.
+`0007-wsi-colorspace-diagnostic.patch` only adds the colorspace to the existing
+opt-in `MESA_VK_WSI_CREATE_LOG=1` output; it is separate from the core fix.
+
+### Root cause and ownership
+
+The retained original trace, `evidence/xr30-before-wayland.log`, shows:
+
+1. EGL's `mesa egl display queue` binds linux-dmabuf v4 and consumes default
+   feedback. The DMA-BUF format set includes XR30.
+2. `eglChooseConfig()` receives minimum RGB8 sizes. Its normal descending
+   color-bit sort can legitimately choose RGB10; Alpha8 excludes RGB10X2/A2.
+3. Kopper uses the config-derived pipe format in
+   `zink_kopper_displaytarget_create()` and `kopper_CreateSwapchain()`, without
+   querying Vulkan SurfaceFormats.
+4. PanVK's actual Wayland WSI uses SHM. Its queue receives only ARGB8888,
+   XRGB8888, ABGR8888 and XBGR8888, then sends
+   `wl_shm_pool.create_buffer(..., 808669784)` (`0x30335258`, XR30).
+5. The compositor rejects XR30 and the connection enters EPROTO (71). The next
+   EGL surface fails. Blender's unchecked secondary-context NULL is a separate
+   application bug, not fixed or worked around here.
+
+Responsibility is the **EGL/Kopper handoff**: EGL used the initializer's
+DMA-BUF capabilities while the Vulkan WSI chose SHM. This is not a blit,
+cache-coherency, FourCC byte-order, or HDR/shader issue.
+
+| Investigation question | Finding |
+|---|---|
+| Are SHM advertisements saved? | `shm_handle_format()` maps supported/renderable entries into `display->formats`, with separate alpha/opaque flags. Unknown/unrenderable entries are intentionally not exposed. |
+| Does SurfaceFormats filter correctly? | Yes. `wsi_wl_surface_get_formats()` and `...get_formats2()` discover the selected transport and omit formats lacking both required alpha/opaque variants. The SHM8 test exposes only formats 44/50, not 58. |
+| Are EGL configs compatible? | Previously not necessarily: `dri2_wl_add_configs_for_visuals()` used EGL's initializer-dependent bitmap, not the actual Vulkan surface capability list. |
+| Did Kopper request an unlisted format? | Yes, it directly converted the EGL drawable pipe format to VkFormat without a surface-format query. |
+| Is `wl_shm_format_for_vk_format()` a capability check? | No. Mapping A2R10G10B10 to XR30 is correct, but the mapping alone does not establish compositor support. |
+| Was a final check missing? | Yes. The SHM creation branch could reach `wl_shm_pool_create_buffer()` for an unadvertised format. |
+| Did debug 0001–0003 inject XR30? | No. 0001 observes copied bytes; 0002 preserves explicit Zink/Kopper on EGL fallback; 0003 fixes drawable lifetime. None adds XR30 formats. |
+| Was this a dynamic DMA-BUF→SHM fallback? | No fallback inside swapchain creation was observed. The disagreement already exists between EGL's format discovery and the independently selected Vulkan WSI transport. |
+
+### Minimal correction
+
+- Wayland EGL obtains a real temporary `wl_surface` and queries the actual
+  Vulkan SurfaceFormats through a direct frontend→Zink helper. Candidate pipe
+  formats use the same `zink_get_format()` mapping and PASS_THROUGH colorspace
+  as Kopper presentation. This runs during display initialization, not per frame.
+- Kopper window-config availability uses that result instead of EGL's
+  DMA-BUF/SHM bitmap. No format substitution or PRIME conversion is introduced.
+  Non-Kopper selection is unchanged. Pbuffer-only Kopper configs use native
+  visual ID zero so `_eglValidateConfig()` accepts them; exact RGB10 pbuffers
+  remain available when RGB10 windows are unsupported.
+- `EGL_PRESENT_OPAQUE_EXT` no longer rechecks the unrelated EGL transport's
+  modifier bitmap for a Kopper window. Temporary Vulkan/Wayland objects are
+  released; `wl_fixes` registry destruction and removal acknowledgements use
+  the existing conventions when available. A non-Zink build has a matching stub.
+- `wsi_wl_surface_create_swapchain()` checks the selected SHM format and requested
+  alpha/opaque variant before allocating images or sending buffer requests.
+  Unsupported requests return `VK_ERROR_INITIALIZATION_FAILED`. The DMA-BUF
+  branch is untouched, and `oldSwapchain` retirement ordering is preserved.
+
+Vulkan requires `imageFormat`/`imageColorSpace` to match an enumerated pair
+([VUID 01273](https://docs.vulkan.org/refpages/latest/refpages/source/VkSwapchainCreateInfoKHR.html)).
+The direct invalid-format case below intentionally violates that input rule to
+test implementation robustness without a validation layer intercepting it;
+it is not a Vulkan conformance test. `VK_ERROR_FORMAT_NOT_SUPPORTED` is not a
+listed `vkCreateSwapchainKHR` return code, so the guard uses initialization failure.
+
+### Cross-build and independent deployment
+
+The user explicitly superseded the attachment's native-build requirement:
+**compile on Fedora x86_64; the phone is for short validation only**. The native
+build was terminated and its Ninja/Clang PIDs were verified gone. No compiler
+ran on the phone for the verified artifacts below.
+
+The existing cross build was reused, preserving its complete p0175/debug stack:
+
+```sh
+# From /home/neurax/panvk-wsi-debug on the x86_64 host:
+ninja -C build/cross-egl-glvnd-gbm -j6
+meson install -C build/cross-egl-glvnd-gbm \
+  --destdir "$PWD/artifacts/xr30-aarch64" --no-rebuild
+tar -I 'zstd -T4 -3' -cf artifacts/xr30-aarch64.tar.zst \
+  -C artifacts/xr30-aarch64 usr
+```
+
+The existing `cross/aarch64-cross.ini` selects aarch64-linux-gnu GCC/G++, the
+Fedora ARM64 glibc sysroot, target-only pkg-config directories and a host
+wayland-scanner. Existing build options include X11/Wayland, Zink, PanVK kbase,
+GLVND EGL/GBM, desktop OpenGL and GLES2, with system host precompilers. No
+software renderer is selected in any passing test. The unrelated existing
+`zink_descriptors.c` maybe-uninitialized warning was not suppressed or changed.
+
+The new ICD, Gallium, EGL and probe were checked with `file`, `readelf -h`,
+`readelf -d` and `readelf --version-info`: ELF64 AArch64, glibc dependencies,
+no Android/Bionic dependency or host-library runtime search path. Full output
+is retained locally at `artifacts/xr30-elf-check.log`.
+
+The tested directory is `/root/panvk-wsi-debug/xr30/runtime/usr/lib64`.
+`/opt/panvk/current` remains the prior `calladdr-cc9041be` stack; no system
+manifest, default selector, kernel or compositor was changed. The test launcher
+`/root/panvk-wsi-debug/xr30/xr30-run` selects only that directory via
+`LD_LIBRARY_PATH`, an independent GLVND vendor JSON, and an independent
+`panvk-kbase.json`. The manifest name retains compatibility with the installed
+`VK_LOADER_DRIVERS_SELECT=panvk-kbase.json` selection. Ending the test process
+is the rollback; there was no default installation to undo.
+
+### Reproducible controlled regression
+
+`wayland-format-probe.c` uses the existing private fork/socketpair test pattern,
+real libwayland-server SHM validation, and the real PanVK ICD. It checks actual
+SHM requests and GPU pixels consumed by the server. The `mixed` fixture sends
+DMA-BUF v4 default/surface feedback containing AR24/XR24/AR30/XR30, using the
+existing render node's device ID; it does not import DMA-BUF buffers. SHM is
+independently restricted to the selected 8- or 10-bit set. A successful mixed
+EGL test requires default feedback and two surface-feedback requests, so a
+silent fallback to the SHM-only EGL initializer cannot make it pass.
+
+Cross-compile the probe on the host (no compilation on the phone):
+
+```sh
+root=/home/neurax/panvk-wsi-debug
+sysroot="$root/cross/sysroot-aarch64"
+out="$root/build/xr30-probe"
+mkdir -p "$out"
+xml="$sysroot/usr/share/wayland-protocols/unstable/linux-dmabuf/linux-dmabuf-unstable-v1.xml"
+wayland-scanner server-header "$xml" "$out/linux-dmabuf-server-protocol.h"
+wayland-scanner private-code "$xml" "$out/linux-dmabuf-protocol.c"
+aarch64-linux-gnu-gcc --sysroot="$sysroot" -isystem "$sysroot/usr/include" \
+  -I"$out" -I"$root/mesa/include" -Wall -Wextra -Wno-unused-parameter -O2 -g \
+  "$root/panvk-kbase-android/patches/debug/wayland-format-probe.c" \
+  "$out/linux-dmabuf-protocol.c" -o "$root/artifacts/wayland-format-probe" \
+  -L"$sysroot/usr/lib64" -Wl,-rpath-link="$sysroot/usr/lib64" \
+  -lwayland-client -lwayland-server -lwayland-egl -lEGL \
+  -l:libGL.so.1 -l:libvulkan.so.1
+```
+
+This sysroot's GLVND libGL link emits a missing transitive `libXext.so.6`
+link-time warning; the target supplies it and the executable loaded successfully.
+After transferring the cross-built probe and libraries, run each case briefly:
+
+```sh
+base=/root/panvk-wsi-debug/xr30
+mkdir -p "$base/runtime"
+tar --zstd -xf "$base/xr30-aarch64.tar.zst" -C "$base/runtime"
+printf '{"file_format_version":"1.0.1","ICD":{"library_path":"%s","api_version":"1.4.363","library_arch":"64"}}\n' \
+  "$base/runtime/usr/lib64/libvulkan_panfrost.so" > "$base/panvk-kbase.json"
+printf '{"file_format_version":"1.0.0","ICD":{"library_path":"%s"}}\n' \
+  "$base/runtime/usr/lib64/libEGL_mesa.so.0" > "$base/egl.json"
+for spec in 'egl 8 mixed' 'egl 10 shm' 'vulkan 8 mixed' 'vulkan 10 shm'; do
+  set -- $spec
+  env -u DISPLAY -u LD_PRELOAD \
+    LD_LIBRARY_PATH="$base/runtime/usr/lib64" \
+    __EGL_VENDOR_LIBRARY_FILENAMES="$base/egl.json" \
+    VK_DRIVER_FILES="$base/panvk-kbase.json" \
+    VK_ICD_FILENAMES="$base/panvk-kbase.json" \
+    VK_LOADER_DRIVERS_SELECT=panvk-kbase.json \
+    MESA_LOADER_DRIVER_OVERRIDE=zink GALLIUM_DRIVER=zink \
+    LIBGL_DRIVERS_PATH="$base/runtime/usr/lib64/dri" \
+    GBM_BACKENDS_PATH="$base/runtime/usr/lib64/gbm" \
+    WAYLAND_DEBUG=1 EGL_LOG_LEVEL=debug MESA_VK_WSI_CREATE_LOG=1 \
+    timeout 20s "$base/wayland-format-probe" "$@"
+done
+```
+
+`WAYLAND_FORMAT_DRM_DEVICE` can select another existing render node for the
+mixed fixture (default `/dev/dri/renderD128`). No render node is fabricated.
+The positive SHM10 fixture adds **both XR30 and AR30** because the current
+WSI's enumeration requires alpha and opaque variants; it does not advertise
+XR30 in the negative SHM8 fixture.
+
+### Measured results and limits
+
+| Case | Result | Evidence |
+|---|---|---|
+| EGL, DMA-BUF10 + SHM8 | PASS: selected RGB8/Alpha0; two sequential 1×1 red/green frames; 8 XR24 buffers, 0 XR30, 0 bad pixels, Wayland error 0 | `evidence/xr30-egl-8-mixed.log` |
+| RGB10 pbuffer with SHM8 | PASS: exact 10/10/10 config retained, PBUFFER bit set and WINDOW bit clear; pbuffer creation succeeds | Same log |
+| EGL, SHM10 | PASS: selected RGB10/Alpha0; 8 XR30 buffers, two correct RGB10 frames; Wayland error 0 | `evidence/xr30-egl-10-shm.log` |
+| Vulkan, DMA-BUF10 + SHM8 | PASS: queried formats 44/50 only; forced format 58 returns -3 without a buffer request; format 44 then succeeds on the same surface/connection | `evidence/xr30-vulkan-8-mixed.log` |
+| Vulkan, SHM10 | PASS: format 58 enumerated; XR30 swapchain and subsequent 8-bit swapchain create successfully | `evidence/xr30-vulkan-10-shm.log` |
+| eglinfo GBM/Surfaceless | PASS: EGL 1.5, PanVK/Zink OpenGL 4.6 core/compatibility and GLES 3.2 | `evidence/xr30-eglinfo.log` |
+| eglinfo Wayland/X11 | FAILED initialization in the unavailable desktop environment; combined eglinfo exit 2 | Same log |
+| Blender native Wayland, Blender XWayland, Firefox WebRender/WebGL | NOT TESTED: no running Niri/Xwayland session; compositor deliberately not started/restarted | No application success claim |
+
+Both rendered EGL cases used a real OpenGL 4.6 core context and reported
+`zink Vulkan 1.4(Mali-G720-Immortalis MC12 (MESA_PANVK))`. The Vulkan-only probe
+checks creation/rejection and protocol safety, not rendering/presentation;
+GPU presentation is checked through EGL/Zink. An initial v3 fixture fell back
+to SHM EGL and failed the pbuffer assertion; those issues were diagnosed and
+corrected before the four passing runs. No full Blender rendering or
+long-duration stability claim follows from these short probes.
+
+The fix is technically generic to Mesa EGL/Kopper/Wayland WSI and can be
+proposed upstream as separate capability-negotiation and SHM-safety changes;
+it contains no PanVK/compositor-name blacklist. No upstream MR was opened.
+Actual native DMA-BUF10 presentation, XWayland rendering, alpha-only format
+sets, wl_fixes-v2 global-removal events, non-Zink builds and rare query-error
+paths have not been runtime-validated here. The DMA-BUF WSI branch and PanVK
+CSF/synchronization are unchanged. These limits must accompany any upstream
+proposal or wider deployment.
+
