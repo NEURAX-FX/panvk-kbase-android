@@ -1,0 +1,22 @@
+RUN_DIR=/root/panvk-wsi-debug/vgem-probe/run-shm.h38pRw
+PROTOCOL shm:
+      4 wl_shm_pool.create_buffer
+      5 wl_shm_pool.destroy
+      7 wl_shm_pool.resize
+    275 wl_surface.attach
+      1 zwp_linux_dmabuf_v1.destroy
+      1 zwp_linux_dmabuf_v1.get_default_feedback
+      1 zwp_linux_dmabuf_v1.get_surface_feedback
+      1     GL_RENDERER:    zink Vulkan 1.4(Mali-G720-Immortalis MC12 (MESA_PANVK))
+      1 MESA: info: panvk: BC emulation on, lowmem (native compressed mask 0xc7fe001e)
+      1 MESA: info: panvk: gpu_id 0xc8700000 variant 0x4 arch v12 model Mali-G720 texture_features 0xc7fe001e 0 0 0
+GLMARK2 shm:
+    OpenGL Information
+    GL_VERSION:     OpenGL ES 3.2 Mesa 26.3.0-devel (git-13c98a0341, p0175, 2026-11-11)
+    Surface Size:   2392x1080 fullscreen
+[build] duration=6:use-vbo=false: FPS: 108 FrameTime: 9.329 ms
+[texture] duration=6:texture-filter=linear: FPS: 104 FrameTime: 9.633 ms
+[shading] duration=6:shading=phong: FPS: 100 FrameTime: 10.033 ms
+                                  glmark2 Score: 103 
+CONSUMER_FRAMES=814
+EXIT=1

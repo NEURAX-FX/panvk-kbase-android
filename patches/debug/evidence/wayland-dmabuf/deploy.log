@@ -1,0 +1,5 @@
+/sbin/ldconfig: /lib64/libvulkan_wrapper.so 不是符号链接
+
+current -> /opt/panvk/wldmabuf-c63caad0
+c63caad047a7b59e9903f13b36698b446d6ea24e191defb34eee4fccbb867ffa  /opt/panvk/current/lib64/libvulkan_panfrost.so
+system manifests/config unchanged

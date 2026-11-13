@@ -1,0 +1,4 @@
+MESA_LOADER_DRIVER_OVERRIDE=zink
+GALLIUM_DRIVER=zink
+VK_LOADER_DRIVERS_SELECT=panvk-kbase.json
+	driverInfo         = Mesa 26.3.0-devel (git-13c98a0341, p0175, 2026-11-13)

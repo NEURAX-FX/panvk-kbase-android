@@ -1,0 +1,13 @@
+===== old (server + clients)
+(II) glamor(0): Using OpenGL 4.6 context.
+(WW) glamor(0): X acceleration enabled without dri support on zink Vulkan 1.4(Mali-G720-Immortalis MC12 (MESA_PANVK))
+MIT-SHM Present 
+[build] duration=8:use-vbo=false:MESA: info: wsi/x11 sw readback 640x360: cached 980.2 fps, uncached 595.4 fps after 8 frames -> cached (early)
+ FPS: 772 FrameTime: 1.297 ms
+                                  glmark2 Score: 771 
+    GL_RENDERER:    zink Vulkan 1.4(Mali-G720-Immortalis MC12 (MESA_PANVK))
+vkcube exit=0
+Selected WSI platform: xcb
+Selected GPU 0: Mali-G720-Immortalis MC12, type: IntegratedGpu
+capture (1920, 1080) lit_pixels=15435
+xvfb errors: 1

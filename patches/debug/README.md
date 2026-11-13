@@ -1170,3 +1170,93 @@ syntax was checked, but rollback was not executed after the passing deployment.
 Restart affected applications after rollback. Temporary deployment/verification
 scripts were removed; the versioned stacks, logs, capture and rollback remain.
 
+
+## Wayland presents through linux-dmabuf by default (2026-11-13)
+
+`0008-panvk-wayland-dmabuf-default.patch` applies after `0001`–`0007`. It
+changes how kbase Wayland clients present frames; X11 is unchanged.
+
+Before this patch, kbase devices were always WSI "sw" devices. On Wayland
+each frame took three copies: GPU blit to a linear readback buffer, CPU
+`memcpy` into `wl_shm` (about 10 MB per frame at 2392x1080), then a texture
+upload in the compositor. kbase can export dma-heap BOs, so Wayland now
+creates GPU images and attaches them with `zwp_linux_buffer_params_v1`. It
+uses the existing dma-buf `EXPORT/IMPORT_SYNC_FILE` implicit-sync path; the
+kbase sync_file export already existed. X11 keeps CPU readback and MIT-SHM,
+because Xvfb and Termux:X11 cannot import these buffers.
+
+- `wsi_device_options::wayland_dmabuf` sets `wsi_device::wayland.dmabuf`.
+  Every Wayland `wsi->sw` decision goes through `wsi_wl_use_sw()`.
+  `MESA_VK_WSI_DEBUG=sw` still forces `wl_shm`.
+- `GetMemoryFdKHR` is resolved for these devices. The present-time CPU fence
+  wait now applies only to CPU images. `wsi_drm_init_swapchain_implicit_sync()`
+  skips non-DRM images, so X11 CPU swapchains no longer create a SYNC_FD
+  semaphore they cannot use.
+- PanVK turns the path on for kbase unless `PANVK_KBASE_DRI3` already selects
+  the full dma-buf WSI. **`PANVK_WSI_WAYLAND_DMABUF=0` restores `wl_shm`.**
+
+vgem was evaluated and rejected as an allocator. A PanVK GPU fill imported
+from a vgem dumb BO reached the CPU only 20–207 ms after the Vulkan fence,
+and never completed without `COHERENT_SYSTEM`. dma-heap BOs were complete
+immediately (`evidence/wayland-dmabuf/vgem-probe.c`). vgem could later supply
+only the DRM device identity that would remove the remaining GPU blit; that
+is not part of this patch.
+
+### Verification on MT6989
+
+Setup: private `niri-anland` with a private Anland consumer
+(`evidence/wayland-dmabuf/verify.sh`). The user session was not touched. The
+client was fullscreen 2392x1080 Zink `glmark2-es2-wayland`. The compositor
+kept the deployed stack; only the client ICD changed.
+
+| ICD / mode | buffers | glmark2 score | stress frames checked | torn/mixed |
+|---|---|---|---|---|
+| deployed XR30 (`wl_shm`) | `wl_shm_pool.create_buffer` | 103, 124 | 519 | 0 |
+| 0008, `PANVK_WSI_WAYLAND_DMABUF=0` | `wl_shm_pool.create_buffer` | 134 | 510 | 0 |
+| 0008 default | `create_immed` | 332, 282, 420, 324 | 310+289+409+420 | 0 |
+| 0008 installed default | `create_immed` | 358 | 353 | 0 |
+| 0008 + `PANVK_KBASE_DRI3=1` | `create_immed` | 496, 651 | 383+361 | 0 |
+
+The stress client `sync-stress.c` runs a long full-screen fragment pass each
+frame and alternates solid colors. `consumer-sync.c` checks a 64x32 grid on
+every frame the Anland consumer receives. A buffer read before the GPU
+finished would contain mixed or foreign colors. None were found.
+
+X11 check: the user's real `/opt/xlibre/25.2.3/bin/Xvfb -glamor` server
+(DRI3/Present over Zink+PanVK), with server and clients on the same ICD
+(`x11-glamor-check.sh`). `glmark2-es2` stayed on `wsi/x11 sw readback`. Scores:
+old 975/959, new 730/1057 (order-alternated runs). The adaptive readback
+mode makes these runs noisy. `vkcube` exited 0 on both, and the root-window
+captures matched (lit pixels 15428–15480). `glxgears` fails identically on
+old and new (`DRI3 not available`, no double-buffered visual); this is a
+pre-existing limitation of this server, not a regression.
+
+### Installed as the device default
+
+- `/opt/panvk/current` points to `/opt/panvk/wldmabuf-c63caad0`.
+- That directory is a copy of `xr30-39e82f3`. The deploy script checked that
+  every file except the ICD matches.
+- ICD SHA-256:
+  `c63caad047a7b59e9903f13b36698b446d6ea24e191defb34eee4fccbb867ffa`.
+  It is ELF64 AArch64, glibc (maximum required `GLIBC_2.38`), with no Bionic
+  `NEEDED` entries.
+- System manifests, `graphics.env`, and `00-panvk.conf` were hash-checked as
+  unchanged.
+- A clean login shell inherits the default selectors.
+- A default-launched `glmark2-es2-wayland` maps EGL, Gallium, and PanVK from
+  `/opt/panvk/wldmabuf-c63caad0/lib64`
+  (`evidence/wayland-dmabuf/def-*.out`, `deploy.log`).
+- Running processes keep their old mappings until restarted.
+
+Rollback switches `current` back to `xr30-39e82f3`. It refuses an unexpected
+selection, and its syntax was checked; it was not executed:
+
+```sh
+sh /root/panvk-wsi-debug/backup-wldmabuf-c63caad0/rollback.sh
+```
+
+Open items:
+- The extra GPU blit remains. PanVK reports no DRM node, so `same_gpu` is
+  false and WSI blits to a linear exportable buffer.
+- Noctalia and Firefox were not re-run on the new default.
+- Long-duration stability was not measured.

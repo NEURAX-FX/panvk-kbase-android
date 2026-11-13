@@ -1,0 +1,27 @@
+===== new (server + clients)
+(II) glamor(0): Using OpenGL 4.6 context.
+(WW) glamor(0): X acceleration enabled without dri support on zink Vulkan 1.4(Mali-G720-Immortalis MC12 (MESA_PANVK))
+MIT-SHM Present 
+[build] duration=8:use-vbo=false:MESA: info: wsi/x11 sw readback 640x360: cached 1151.0/1304.7 fps, uncached 1459.1 fps -> uncached
+ FPS: 1058 FrameTime: 0.946 ms
+                                  glmark2 Score: 1057 
+    GL_RENDERER:    zink Vulkan 1.4(Mali-G720-Immortalis MC12 (MESA_PANVK))
+vkcube exit=0
+Selected WSI platform: xcb
+Selected GPU 0: Mali-G720-Immortalis MC12, type: IntegratedGpu
+capture (1920, 1080) lit_pixels=15465
+xvfb errors: 1
+===== old (server + clients)
+(II) glamor(0): Using OpenGL 4.6 context.
+(WW) glamor(0): X acceleration enabled without dri support on zink Vulkan 1.4(Mali-G720-Immortalis MC12 (MESA_PANVK))
+MIT-SHM Present 
+[build] duration=8:use-vbo=false:MESA: info: wsi/x11 sw readback 640x360: cached 810.0 fps, uncached 565.7 fps after 173 frames -> cached (early)
+ FPS: 960 FrameTime: 1.042 ms
+                                  glmark2 Score: 959 
+    GL_RENDERER:    zink Vulkan 1.4(Mali-G720-Immortalis MC12 (MESA_PANVK))
+vkcube exit=0
+Selected WSI platform: xcb
+Selected GPU 0: Mali-G720-Immortalis MC12, type: IntegratedGpu
+capture (1920, 1080) lit_pixels=15480
+xvfb errors: 1
+DONE

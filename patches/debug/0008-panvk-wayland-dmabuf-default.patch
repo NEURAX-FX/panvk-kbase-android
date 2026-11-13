@@ -1,0 +1,240 @@
+From: NEURAX-FX <234716687+NEURAX-FX@users.noreply.github.com>
+Subject: [PATCH] panvk/wsi: present Wayland through linux-dmabuf on kbase
+
+kbase devices are WSI "sw" devices: every present reads the image back on
+the CPU and copies it into a wl_shm buffer, which the compositor uploads
+again. kbase dma-heap BOs can be exported, so keep the CPU readback for X11
+(MIT-SHM; Xvfb/Termux:X11 cannot import them) and present Wayland through
+zwp_linux_dmabuf_v1 with the existing dma-buf implicit-sync bridge.
+
+- wsi_device_options::wayland_dmabuf / wsi_device::wayland.dmabuf: Wayland
+  ignores wsi->sw (MESA_VK_WSI_DEBUG=sw still forces wl_shm).
+- GetMemoryFdKHR is resolved for such devices; the sw present-time fence
+  wait and the implicit-sync semaphore only apply to the matching image
+  type, so X11 CPU swapchains keep their old behaviour.
+- PanVK enables it for kbase unless PANVK_KBASE_DRI3 already selects the
+  full dma-buf path; PANVK_WSI_WAYLAND_DMABUF=0 restores wl_shm.
+
+MT6989 (G720, niri-anland -> Anland, 2392x1080 Zink glmark2-es2-wayland):
+wl_shm 103-134 -> linux-dmabuf 282-420 fps; 0 torn/mixed frames over 1781
+consumer-checked frames.
+
+Generated-by: LLM
+---
+diff --git a/src/panfrost/vulkan/panvk_wsi.c b/src/panfrost/vulkan/panvk_wsi.c
+index f7ff544..3f89e8f 100644
+--- a/src/panfrost/vulkan/panvk_wsi.c
++++ b/src/panfrost/vulkan/panvk_wsi.c
+@@ -724,6 +724,21 @@ panvk_wsi_init(struct panvk_physical_device *physical_device)
+       kbase_kmod_supports_dmabuf(physical_device->kmod.dev);
+ #else
+       false;
++#endif
++   /* The CPU readback (sw) path copies every frame twice on Wayland: GPU
++    * image -> readback buffer -> wl_shm, then the compositor uploads the SHM
++    * buffer again.  kbase dma-heap BOs can be shared with the compositor
++    * instead (MT6989 niri/Anland, 2392x1080 glmark2: ~100-135 -> 280-420), so
++    * Wayland uses linux-dmabuf while X11 keeps MIT-SHM, whose servers
++    * (Xvfb, Termux:X11) cannot import these buffers.
++    * PANVK_WSI_WAYLAND_DMABUF=0 restores wl_shm. */
++   const bool wayland_dmabuf =
++#if defined(HAVE_PAN_KMOD_KBASE)
++      uses_kbase && !kbase_dmabuf &&
++      debug_get_bool_option("PANVK_WSI_WAYLAND_DMABUF", true) &&
++      kbase_kmod_supports_dmabuf(physical_device->kmod.dev);
++#else
++      false;
+ #endif
+    VkResult result;
+ 
+@@ -737,6 +752,7 @@ panvk_wsi_init(struct panvk_physical_device *physical_device)
+                                 * fourth image when the server is Xwayland. */
+                                .extra_xwayland_image =
+                                   kbase_dmabuf && kbase_raw_dri3,
++                               .wayland_dmabuf = wayland_dmabuf,
+                             });
+    if (result != VK_SUCCESS)
+       return result;
+@@ -754,7 +770,7 @@ panvk_wsi_init(struct panvk_physical_device *physical_device)
+     * Termux:X11/Winlator private raw-FD modifier instead of DRM modifiers.
+     */
+    physical_device->wsi_device.supports_modifiers =
+-      !uses_kbase || (kbase_dmabuf && !kbase_raw_dri3);
++      !uses_kbase || (kbase_dmabuf && !kbase_raw_dri3) || wayland_dmabuf;
+    physical_device->wsi_device.can_present_on_device =
+       panvk_can_present_on_device;
+ 
+diff --git a/src/vulkan/wsi/wsi_common.c b/src/vulkan/wsi/wsi_common.c
+index af7dd26..b374b85 100644
+--- a/src/vulkan/wsi/wsi_common.c
++++ b/src/vulkan/wsi/wsi_common.c
+@@ -94,6 +94,8 @@ wsi_device_init(struct wsi_device *wsi,
+    wsi->wants_linear = (WSI_DEBUG & WSI_DEBUG_LINEAR) != 0;
+    wsi->x11.extra_xwayland_image = device_options->extra_xwayland_image;
+    wsi->wayland.disable_timestamps = (WSI_DEBUG & WSI_DEBUG_NOWLTS) != 0;
++   wsi->wayland.dmabuf = device_options->wayland_dmabuf &&
++                         !(WSI_DEBUG & WSI_DEBUG_SW);
+    wsi->emulate_24as32 = device_options->emulate_24as32;
+ #define WSI_GET_CB(func) \
+    PFN_vk##func func = (PFN_vk##func)proc_addr(pdevice, "vk" #func)
+@@ -222,7 +224,7 @@ wsi_device_init(struct wsi_device *wsi,
+    WSI_GET_CB(GetImageDrmFormatModifierPropertiesEXT);
+    WSI_GET_CB(GetImageMemoryRequirements);
+    WSI_GET_CB(GetImageSubresourceLayout);
+-   if (!wsi->sw)
++   if (!wsi->sw || wsi->wayland.dmabuf)
+       WSI_GET_CB(GetMemoryFdKHR);
+    WSI_GET_CB(GetPhysicalDeviceCalibrateableTimeDomainsKHR);
+    WSI_GET_CB(GetPhysicalDeviceProperties);
+@@ -2912,7 +2914,8 @@ wsi_common_queue_present(const struct wsi_device *wsi,
+ #endif
+       }
+ 
+-      if (wsi->sw && !swapchain->sw_fence_wait_in_present_thread) {
++      if (wsi->sw && swapchain->image_info.image_type == WSI_IMAGE_TYPE_CPU &&
++          !swapchain->sw_fence_wait_in_present_thread) {
+          wsi->WaitForFences(vk_device_to_handle(dev),
+                             1, &swapchain->fences[image_index], true, ~0ull);
+       }
+diff --git a/src/vulkan/wsi/wsi_common.h b/src/vulkan/wsi/wsi_common.h
+index 576f1fe..c316fef 100644
+--- a/src/vulkan/wsi/wsi_common.h
++++ b/src/vulkan/wsi/wsi_common.h
+@@ -194,6 +194,11 @@ struct wsi_device {
+    struct {
+       /* Don't use the commit-timing protocol for pacing */
+       bool disable_timestamps;
++
++      /* sw device only: Wayland still presents through linux-dmabuf
++       * (GPU images, compositor imports) while other platforms keep the
++       * CPU readback path.  Cleared by MESA_VK_WSI_DEBUG=sw. */
++      bool dmabuf;
+    } wayland;
+ 
+    /*
+@@ -284,6 +289,8 @@ typedef PFN_vkVoidFunction (VKAPI_PTR *WSI_FN_GetPhysicalDeviceProcAddr)(VkPhysi
+ struct wsi_device_options {
+    bool sw_device;
+    bool extra_xwayland_image;
++   /* See wsi_device::wayland.dmabuf. */
++   bool wayland_dmabuf;
+    bool emulate_24as32;
+ };
+ 
+diff --git a/src/vulkan/wsi/wsi_common_drm.c b/src/vulkan/wsi/wsi_common_drm.c
+index dbf65b2..b8f8d81 100644
+--- a/src/vulkan/wsi/wsi_common_drm.c
++++ b/src/vulkan/wsi/wsi_common_drm.c
+@@ -373,6 +373,13 @@ wsi_drm_init_swapchain_implicit_sync(struct wsi_swapchain *chain)
+    if (chain->image_info.explicit_sync)
+       return VK_SUCCESS;
+ 
++   /* CPU images (sw readback) have no dma-buf to attach a sync file to.
++    * This matters once a sw device exports memory for another platform
++    * (wsi_device::wayland.dmabuf): its X11 swapchains are still CPU ones.
++    */
++   if (chain->image_info.image_type != WSI_IMAGE_TYPE_DRM)
++      return VK_SUCCESS;
++
+    VkResult result =
+       wsi_drm_check_dma_buf_sync_file_import_export(chain->wsi, chain->device);
+    if (result == VK_ERROR_FEATURE_NOT_PRESENT)
+diff --git a/src/vulkan/wsi/wsi_common_wayland.c b/src/vulkan/wsi/wsi_common_wayland.c
+index 3483347..8e1838a 100644
+--- a/src/vulkan/wsi/wsi_common_wayland.c
++++ b/src/vulkan/wsi/wsi_common_wayland.c
+@@ -264,6 +264,13 @@ wsi_wl_use_explicit_sync(struct wsi_wl_display *display, struct wsi_device *devi
+           display->wl_syncobj != NULL;
+ }
+ 
++/* CPU readback + wl_shm, unless the device keeps Wayland on linux-dmabuf. */
++static bool
++wsi_wl_use_sw(const struct wsi_device *wsi_device)
++{
++   return wsi_device->sw && !wsi_device->wayland.dmabuf;
++}
++
+ enum wsi_wl_fmt_flag {
+    WSI_WL_FMT_ALPHA = 1 << 0,
+    WSI_WL_FMT_OPAQUE = 1 << 1,
+@@ -1792,7 +1799,7 @@ wsi_GetPhysicalDeviceWaylandPresentationSupportKHR(VkPhysicalDevice physicalDevi
+ 
+    struct wsi_wl_display display;
+    VkResult ret = wsi_wl_display_init(wsi, &display, wl_display, false,
+-                                      wsi_device->sw, "mesa presentation support query");
++                                      wsi_wl_use_sw(wsi_device), "mesa presentation support query");
+    if (ret == VK_SUCCESS)
+       wsi_wl_display_finish(&display);
+ 
+@@ -1868,7 +1875,7 @@ wsi_wl_surface_get_capabilities(VkIcdSurfaceBase *icd_surface,
+ 
+    if (!wsi_wl_surface->display) {
+       if (wsi_wl_display_init(wsi, &temp_display, surface->display, true,
+-                              wsi_device->sw, "mesa image count query"))
++                              wsi_wl_use_sw(wsi_device), "mesa image count query"))
+          return VK_ERROR_SURFACE_LOST_KHR;
+       display = &temp_display;
+    }
+@@ -1925,7 +1932,7 @@ wsi_wl_surface_check_presentation(VkIcdSurfaceBase *icd_surface,
+    struct wsi_wl_display display;
+ 
+    if (wsi_wl_display_init(wsi, &display, surface->display, true,
+-                           wsi_device->sw, "mesa check wp_presentation"))
++                           wsi_wl_use_sw(wsi_device), "mesa check wp_presentation"))
+       return VK_ERROR_SURFACE_LOST_KHR;
+ 
+    if (has_wp_presentation)
+@@ -1959,7 +1966,7 @@ wsi_wl_surface_get_present_modes(VkIcdSurfaceBase *icd_surface,
+ 
+    struct wsi_wl_display display;
+    if (wsi_wl_display_init(wsi, &display, surface->display, true,
+-                           wsi_device->sw, "mesa present modes query"))
++                           wsi_wl_use_sw(wsi_device), "mesa present modes query"))
+       return VK_ERROR_SURFACE_LOST_KHR;
+ 
+    VkPresentModeKHR present_modes[WSI_WL_MAX_PRESENT_MODES];
+@@ -2191,7 +2198,7 @@ wsi_wl_surface_get_formats(VkIcdSurfaceBase *icd_surface,
+ 
+    struct wsi_wl_display display;
+    if (wsi_wl_display_init(wsi, &display, surface->display, true,
+-                           wsi_device->sw, "mesa formats query"))
++                           wsi_wl_use_sw(wsi_device), "mesa formats query"))
+       return VK_ERROR_SURFACE_LOST_KHR;
+ 
+    VK_OUTARRAY_MAKE_TYPED(VkSurfaceFormatKHR, out,
+@@ -2236,7 +2243,7 @@ wsi_wl_surface_get_formats2(VkIcdSurfaceBase *icd_surface,
+ 
+    struct wsi_wl_display display;
+    if (wsi_wl_display_init(wsi, &display, surface->display, true,
+-                           wsi_device->sw, "mesa formats2 query"))
++                           wsi_wl_use_sw(wsi_device), "mesa formats2 query"))
+       return VK_ERROR_SURFACE_LOST_KHR;
+ 
+    VK_OUTARRAY_MAKE_TYPED(VkSurfaceFormat2KHR, out,
+@@ -2529,7 +2536,7 @@ static VkResult wsi_wl_surface_init(struct wsi_wl_surface *wsi_wl_surface,
+       return VK_SUCCESS;
+ 
+    result = wsi_wl_display_create(wsi, wsi_wl_surface->base.display,
+-                                  wsi_device->sw, &wsi_wl_surface->display);
++                                  wsi_wl_use_sw(wsi_device), &wsi_wl_surface->display);
+    if (result != VK_SUCCESS)
+       goto fail;
+ 
+@@ -3893,7 +3900,7 @@ wsi_wl_surface_create_swapchain(VkIcdSurfaceBase *icd_surface,
+    if (result != VK_SUCCESS)
+       goto fail;
+ 
+-   if (wsi_device->sw) {
++   if (wsi_wl_use_sw(wsi_device)) {
+       struct wsi_wl_format *format =
+          find_format(&wsi_wl_surface->display->formats, pCreateInfo->imageFormat);
+       uint32_t flag = pCreateInfo->compositeAlpha ==
+@@ -3940,7 +3947,7 @@ wsi_wl_surface_create_swapchain(VkIcdSurfaceBase *icd_surface,
+    struct wsi_drm_image_params drm_image_params;
+    uint32_t num_drm_modifiers = 0;
+    const uint64_t *drm_modifiers = NULL;
+-   if (wsi_device->sw) {
++   if (wsi_wl_use_sw(wsi_device)) {
+       cpu_image_params = (struct wsi_cpu_image_params) {
+          .base.image_type = WSI_IMAGE_TYPE_CPU,
+       };

@@ -1,0 +1,14 @@
+RUN_DIR=/root/panvk-wsi-debug/vgem-probe/v-new1.r15tQk
+== protocol
+    803 wl_surface.attach
+      4 zwp_linux_buffer_params_v1.create_immed
+    GL_RENDERER:    zink Vulkan 1.4(Mali-G720-Immortalis MC12 (MESA_PANVK))
+== glmark2 fullscreen
+[build] duration=6:use-vbo=false: FPS: 285 FrameTime: 3.516 ms
+[texture] duration=6:texture-filter=linear: FPS: 280 FrameTime: 3.575 ms
+[shading] duration=6:shading=phong: FPS: 285 FrameTime: 3.516 ms
+                                  glmark2 Score: 282 
+== sync stress
+STRESS renderer=zink Vulkan 1.4(Mali-G720-Immortalis MC12 (MESA_PANVK)) size=2392x1080 frames=600 iters=200
+STRESS_DONE frames=600 seconds=5.96 fps=100.7
+RESULT samples=289 solid=289 mixed=0 foreign=0 hist=87/99/103 elapsed_ms=4052
