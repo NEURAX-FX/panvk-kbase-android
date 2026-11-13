@@ -1,0 +1,60 @@
+diff --git a/src/panfrost/vulkan/panvk_physical_device.c b/src/panfrost/vulkan/panvk_physical_device.c
+index 8f34389..cccbe43 100644
+--- a/src/panfrost/vulkan/panvk_physical_device.c
++++ b/src/panfrost/vulkan/panvk_physical_device.c
+@@ -423,6 +423,43 @@ get_drm_device_ids(struct panvk_physical_device *device,
+    return VK_SUCCESS;
+ }
+ 
++#if defined(HAVE_PAN_KMOD_KBASE) && defined(HAVE_LIBDRM)
++static void
++kbase_set_drm_render_alias(struct panvk_physical_device *device)
++{
++   const char *node = os_get_option("PANVK_KBASE_DRM_NODE");
++   if (!node || !node[0] || !strcmp(node, "0"))
++      return;
++
++   int fd = open(node, O_RDONLY | O_CLOEXEC | O_NONBLOCK | O_NOCTTY);
++   if (fd < 0) {
++      mesa_logw("kbase: cannot open PANVK_KBASE_DRM_NODE=%s: %s", node,
++                strerror(errno));
++      return;
++   }
++
++   struct stat st;
++   char name[sizeof("vgem") - 1];
++   struct drm_version version = {
++      .name_len = sizeof(name),
++      .name = name,
++   };
++   bool is_vgem_render = fstat(fd, &st) == 0 && S_ISCHR(st.st_mode) &&
++                         drmGetNodeTypeFromFd(fd) == DRM_NODE_RENDER &&
++                         drmIoctl(fd, DRM_IOCTL_VERSION, &version) == 0 &&
++                         version.name_len == sizeof(name) &&
++                         !memcmp(name, "vgem", sizeof(name));
++   close(fd);
++
++   if (!is_vgem_render) {
++      mesa_logw("kbase: PANVK_KBASE_DRM_NODE=%s is not a vgem render node", node);
++      return;
++   }
++
++   device->drm.render_rdev = st.st_rdev;
++}
++#endif
++
+ static void
+ init_shader_caches(struct panvk_physical_device *device,
+                    const struct panvk_instance *instance)
+@@ -1427,8 +1464,9 @@ panvk_physical_device_init_kbase(struct panvk_physical_device *device,
+       goto fail_kbase;
+    }
+ 
+-   /* kbase does not expose DRM nodes, so drm.{render,primary}_rdev are left
+-    * zeroed; WSI paths that compare rdev values will simply not match. */
++#if defined(HAVE_LIBDRM)
++   kbase_set_drm_render_alias(device);
++#endif
+ 
+    device->formats.all = pan_format_table(arch);
+    device->formats.blendable = pan_blendable_format_table(arch);

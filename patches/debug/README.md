@@ -1198,9 +1198,8 @@ because Xvfb and Termux:X11 cannot import these buffers.
 vgem was evaluated and rejected as an allocator. A PanVK GPU fill imported
 from a vgem dumb BO reached the CPU only 20–207 ms after the Vulkan fence,
 and never completed without `COHERENT_SYSTEM`. dma-heap BOs were complete
-immediately (`evidence/wayland-dmabuf/vgem-probe.c`). vgem could later supply
-only the DRM device identity that would remove the remaining GPU blit; that
-is not part of this patch.
+immediately (`evidence/wayland-dmabuf/vgem-probe.c`). This patch does not use
+vgem for allocations or advertise it through `VK_EXT_physical_device_drm`.
 
 ### Verification on MT6989
 
@@ -1256,7 +1255,59 @@ sh /root/panvk-wsi-debug/backup-wldmabuf-c63caad0/rollback.sh
 ```
 
 Open items:
-- The extra GPU blit remains. PanVK reports no DRM node, so `same_gpu` is
-  false and WSI blits to a linear exportable buffer.
 - Noctalia and Firefox were not re-run on the new default.
 - Long-duration stability was not measured.
+
+## Opt-in vgem render-node alias
+
+`0009-panvk-kbase-vgem-render-alias.patch` applies after `0001`–`0008`.
+On kbase builds with libdrm, `PANVK_KBASE_DRM_NODE=/dev/dri/renderD128`
+reports the verified vgem render node in `VkPhysicalDeviceDrmPropertiesEXT`.
+The driver checks the opened node's type and DRM driver name and reads its
+device number from the file descriptor. It never scans for a node or
+advertises a primary node. Unset, empty, `0`, or an invalid path leaves the
+DRM properties unchanged and does not prevent Mali enumeration. The alias
+does not select a rendering backend or allocator: GPU work stays on
+`/dev/mali*` and dma-buf allocations stay on dma-heap.
+
+Use an isolated manifest next to the matching library:
+
+```sh
+env VK_DRIVER_FILES=/path/to/panvk-kbase-vgem.json \
+    VK_LOADER_DRIVERS_SELECT=panvk-kbase-vgem.json \
+    PANVK_KBASE_DRM_NODE=/dev/dri/renderD128 \
+    vulkaninfo | grep -A8 '^VkPhysicalDeviceDrmPropertiesEXT:'
+```
+
+### Verification on MT6989
+
+The pre-vgem ICD reported no render node with the option set. Full
+`vulkaninfo` with the isolated ARM64 glibc ICD loaded `DRIVER_ID_MESA_PANVK`
+on Mali-G720-Immortalis MC12 and produced these results:
+
+| `PANVK_KBASE_DRM_NODE` | `hasRender` | Render major:minor |
+|---|---|---|
+| `/dev/dri/renderD128` or a symlink to it | `true` | `226:128` |
+| Unset, empty, or `0` | `false` | `0:0` |
+| Missing path, `renderD*` symlink to `/dev/null`, or `renderD*` symlink to vgem `card1` | `false` | `0:0` |
+
+`hasPrimary` was `false` and both primary numbers were zero in all cases.
+`wayland-info` decoded the running compositor's default DMA-BUF feedback
+`main_device` as `0xe280` (`226:128`). Both four-frame Wayland `vkcube` runs
+(alias enabled and unset) exited 0. Each traced four surface attaches and a
+buffer release, with `create_immed` and AFBC modifier `0x0800000000000072`
+in both runs. `strace` confirmed `/dev/mali0` and successful allocations
+through `/dev/dma_heap/system` in both cases. This was a submission and
+completion smoke test, not a captured-pixel or long-duration test.
+
+The alias does not demonstrate removal of a blit. Without DRM properties,
+Wayland WSI assumes `same_gpu`; with the alias enabled, it compares the
+reported number to compositor feedback. A nonmatching feedback device can
+instead make WSI take the different-GPU path.
+
+The isolated ICD and logs are in `/root/panvk-wsi-debug/icd-vgem.MgTEIh/`
+(`properties.log`, `wayland-info.log`, `wayland-smoke.log`, `cube-*.strace`).
+ICD SHA-256: `8bb86be9f190a424eff893892d8c6c73e9fb54470271229f73da83702bdd180c`.
+It is ELF64 AArch64 with maximum required `GLIBC_2.38`, with kbase, Wayland
+and X11 WSI compiled in. `/opt/panvk/current` and the running compositor were
+left unchanged.
