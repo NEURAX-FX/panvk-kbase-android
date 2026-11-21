@@ -1,0 +1,580 @@
+From e1801782bb1e4b16d7076d991d4f6fff0f6a1e4d Mon Sep 17 00:00:00 2001
+From: PanVK WSI Debug <debug@localhost>
+Date: Sat, 21 Nov 2026 09:27:05 +0800
+Subject: [PATCH] panvk/csf: bridge imported sync files through stock kbase
+ queues
+
+Queue native fence waits through the existing KCPU FENCE_WAIT and CQS_SET_OPERATION ABI, then wait on the event in each dependent GPU subqueue. No kernel changes are required.
+Keep wait-only submits and exported sync files pending until their external dependencies complete. Separate wait and signal KCPU queues per Vulkan queue to avoid cross-queue head-of-line blocking.
+Probe support before queuing a real wait, retain the CPU path when unsupported, and fail closed after a partial enqueue. Keep event memory alive until GPU groups and KCPU commands are terminated.
+---
+ include/drm-uapi/mali_kbase_ioctl.h          |  17 +++
+ src/panfrost/lib/kmod/kbase_kmod.c           | 146 ++++++++++++++-----
+ src/panfrost/lib/kmod/kbase_kmod.h           |  19 +++
+ src/panfrost/vulkan/csf/panvk_queue.h        |  13 +-
+ src/panfrost/vulkan/csf/panvk_vX_gpu_queue.c | 122 +++++++++++++++-
+ src/panfrost/vulkan/jm/panvk_vX_gpu_queue.c  |   4 +-
+ src/panfrost/vulkan/panvk_physical_device.c  |  42 +++++-
+ src/panfrost/vulkan/panvk_physical_device.h  |   9 +-
+ 8 files changed, 320 insertions(+), 52 deletions(-)
+
+diff --git a/include/drm-uapi/mali_kbase_ioctl.h b/include/drm-uapi/mali_kbase_ioctl.h
+index 0a8ab52..4f82e8d 100644
+--- a/include/drm-uapi/mali_kbase_ioctl.h
++++ b/include/drm-uapi/mali_kbase_ioctl.h
+@@ -530,2 +530,4 @@ enum base_kcpu_command_type {
+ #define BASEP_CQS_WAIT_OPERATION_GT 1
++#define BASEP_CQS_SET_OPERATION_ADD 0
++#define BASEP_CQS_SET_OPERATION_SET 1
+ #define BASEP_CQS_DATA_TYPE_U32 0
+@@ -558,2 +560,16 @@ struct base_kcpu_command_cqs_wait_operation_info {
+ 
++struct base_cqs_set_operation_info {
++   __u64 addr;
++   __u64 val;
++   __u8 operation;
++   __u8 data_type;
++   __u8 padding[6];
++};
++
++struct base_kcpu_command_cqs_set_operation_info {
++   __u64 objs;
++   __u32 nr_objs;
++   __u32 padding;
++};
++
+ struct base_kcpu_command {
+@@ -564,2 +580,3 @@ struct base_kcpu_command {
+       struct base_kcpu_command_cqs_wait_operation_info cqs_wait_operation;
++      struct base_kcpu_command_cqs_set_operation_info cqs_set_operation;
+       __u64 padding[2];
+diff --git a/src/panfrost/lib/kmod/kbase_kmod.c b/src/panfrost/lib/kmod/kbase_kmod.c
+index cbc7a57..3d65cd8 100644
+--- a/src/panfrost/lib/kmod/kbase_kmod.c
++++ b/src/panfrost/lib/kmod/kbase_kmod.c
+@@ -236,8 +236,2 @@ struct kbase_kmod_dev {
+ 
+-   struct {
+-      simple_mtx_t lock;
+-      base_kcpu_queue_id id;
+-      bool valid;
+-   } kcpu_export;
+-
+    simple_mtx_t atoms_lock;
+@@ -1548,4 +1542,112 @@ out:
+ 
++void
++kbase_kmod_csf_kcpu_queue_init(struct kbase_kmod_kcpu_queue *queue)
++{
++   simple_mtx_init(&queue->lock, mtx_plain);
++   queue->id = UINT32_MAX;
++   queue->wait_unsupported = false;
++}
++
++void
++kbase_kmod_csf_kcpu_queue_finish(struct pan_kmod_dev *dev,
++                                struct kbase_kmod_kcpu_queue *queue)
++{
++   if (queue->id != UINT32_MAX) {
++      struct kbase_ioctl_kcpu_queue_delete delete = {.id = queue->id};
++      ioctl(dev->fd, KBASE_IOCTL_KCPU_QUEUE_DELETE, &delete);
++   }
++   simple_mtx_destroy(&queue->lock);
++}
++
++/* Each enqueue copies its argument and takes its own fence reference. */
++static int
++kbase_kcpu_enqueue(struct pan_kmod_dev *dev,
++                    struct kbase_kmod_kcpu_queue *queue,
++                    struct base_kcpu_command *command)
++{
++   struct kbase_kmod_dev *kd = container_of(dev, struct kbase_kmod_dev, base);
++   if (!kd->is_csf) {
++      errno = ENOTSUP;
++      return -1;
++   }
++
++   if (queue->id == UINT32_MAX) {
++      struct kbase_ioctl_kcpu_queue_new create = {0};
++      if (ioctl(dev->fd, KBASE_IOCTL_KCPU_QUEUE_CREATE, &create))
++         return -1;
++      queue->id = create.id;
++   }
++
++   struct kbase_ioctl_kcpu_queue_enqueue enqueue = {
++      .addr = (uintptr_t)command,
++      .nr_commands = 1,
++      .id = queue->id,
++   };
++   return ioctl(dev->fd, KBASE_IOCTL_KCPU_QUEUE_ENQUEUE, &enqueue);
++}
++
++int
++kbase_kmod_csf_wait_sync_file(struct pan_kmod_dev *dev,
++                             struct kbase_kmod_kcpu_queue *queue, int fd,
++                             uint64_t addr, uint64_t value)
++{
++   STATIC_ASSERT(sizeof(struct base_cqs_set_operation_info) == 24);
++   STATIC_ASSERT(sizeof(struct base_kcpu_command) == 24);
++   if (fd < 0 || (addr & 15) || !value)
++      return -EINVAL;
++
++   struct base_fence fence = {.basep = {.fd = fd, .stream_fd = -1}};
++   struct base_cqs_set_operation_info set = {
++      .addr = addr,
++      .operation = BASEP_CQS_SET_OPERATION_SET,
++      .data_type = BASEP_CQS_DATA_TYPE_U64,
++   };
++   struct base_kcpu_command commands[] = {
++      {.type = BASE_KCPU_COMMAND_TYPE_FENCE_WAIT,
++       .info.fence.fence = (uintptr_t)&fence},
++      {.type = BASE_KCPU_COMMAND_TYPE_CQS_SET_OPERATION,
++       .info.cqs_set_operation = {.objs = (uintptr_t)&set, .nr_objs = 1}},
++   };
++
++   simple_mtx_lock(&queue->lock);
++   int ret = 0;
++   if (queue->wait_unsupported)
++      goto out;
++
++   /* Probe the stock kernel before queuing an unresolved fence. A rejected
++    * CQS command must leave the existing CPU wait path usable. */
++   if (queue->id == UINT32_MAX &&
++       kbase_kcpu_enqueue(dev, queue, &commands[1])) {
++      queue->wait_unsupported = true;
++      mesa_logw("kbase: native fence bridge unavailable: %s; using CPU waits",
++                strerror(errno));
++      goto out;
++   }
++
++   set.val = value;
++   for (unsigned i = 0; i < ARRAY_SIZE(commands); i++) {
++      if (kbase_kcpu_enqueue(dev, queue, &commands[i])) {
++         if (!i && (errno == EINVAL || errno == ENOTTY || errno == ENOTSUP)) {
++            queue->wait_unsupported = true;
++            mesa_logw("kbase: native fence wait unavailable: %s; using CPU waits",
++                      strerror(errno));
++            ret = 0;
++         } else {
++            ret = -errno;
++         }
++         goto out;
++      }
++   }
++   ret = 1;
++
++out:
++   simple_mtx_unlock(&queue->lock);
++   /* A failure after FENCE_WAIT was accepted cannot fall back or publish
++    * dependent GPU work. The caller must fail the Vulkan queue. */
++   return ret;
++}
++
+ int
+ kbase_kmod_csf_export_cqs64_fence(struct pan_kmod_dev *dev,
++                                  struct kbase_kmod_kcpu_queue *queue,
+                                   const uint64_t *addrs,
+@@ -1569,2 +1671,3 @@ kbase_kmod_csf_export_cqs64_fence(struct pan_kmod_dev *dev,
+             .nr_objs = count,
++            .inherit_err_flags = BITFIELD_MASK(count),
+          },
+@@ -1602,21 +1705,6 @@ kbase_kmod_csf_export_cqs64_fence(struct pan_kmod_dev *dev,
+ 
+-   simple_mtx_lock(&kbase_dev->kcpu_export.lock);
+-   if (!kbase_dev->kcpu_export.valid) {
+-      struct kbase_ioctl_kcpu_queue_new create = {0};
+-      if (ioctl(dev->fd, KBASE_IOCTL_KCPU_QUEUE_CREATE, &create)) {
+-         simple_mtx_unlock(&kbase_dev->kcpu_export.lock);
+-         return -1;
+-      }
+-      kbase_dev->kcpu_export.id = create.id;
+-      kbase_dev->kcpu_export.valid = true;
+-   }
+-
++   simple_mtx_lock(&queue->lock);
+    for (unsigned i = count ? 0 : 1; i < 2; i++) {
+-      struct kbase_ioctl_kcpu_queue_enqueue enqueue = {
+-         .addr = (uintptr_t)&commands[i],
+-         .nr_commands = 1,
+-         .id = kbase_dev->kcpu_export.id,
+-      };
+-      if (ioctl(dev->fd, KBASE_IOCTL_KCPU_QUEUE_ENQUEUE, &enqueue)) {
+-         simple_mtx_unlock(&kbase_dev->kcpu_export.lock);
++      if (kbase_kcpu_enqueue(dev, queue, &commands[i])) {
++         simple_mtx_unlock(&queue->lock);
+          return -1;
+@@ -1624,3 +1712,3 @@ kbase_kmod_csf_export_cqs64_fence(struct pan_kmod_dev *dev,
+    }
+-   simple_mtx_unlock(&kbase_dev->kcpu_export.lock);
++   simple_mtx_unlock(&queue->lock);
+ 
+@@ -2193,3 +2281,2 @@ kbase_kmod_dev_create(int fd, uint32_t flags,
+    simple_mtx_init(&kbase_dev->kcpu.lock, mtx_plain);
+-   simple_mtx_init(&kbase_dev->kcpu_export.lock, mtx_plain);
+    simple_mtx_init(&kbase_dev->nc_lock, mtx_plain);
+@@ -2367,9 +2454,2 @@ kbase_kmod_dev_destroy(struct pan_kmod_dev *dev)
+ 
+-   if (kbase_dev->kcpu_export.valid) {
+-      struct kbase_ioctl_kcpu_queue_delete delete = {
+-         .id = kbase_dev->kcpu_export.id,
+-      };
+-      ioctl(dev->fd, KBASE_IOCTL_KCPU_QUEUE_DELETE, &delete);
+-   }
+-   simple_mtx_destroy(&kbase_dev->kcpu_export.lock);
+    simple_mtx_destroy(&kbase_dev->nc_lock);
+diff --git a/src/panfrost/lib/kmod/kbase_kmod.h b/src/panfrost/lib/kmod/kbase_kmod.h
+index 1782cf9..69863e0 100644
+--- a/src/panfrost/lib/kmod/kbase_kmod.h
++++ b/src/panfrost/lib/kmod/kbase_kmod.h
+@@ -9,2 +9,3 @@
+ #include <stdint.h>
++#include "util/simple_mtx.h"
+ 
+@@ -167,3 +168,21 @@ int kbase_kmod_csf_wait_cqs64(struct pan_kmod_dev *dev, uint64_t addr,
+ 
++/* Separate queues for imported waits and exported signals, owned by each
++ * Vulkan queue. Never put a later imported wait ahead of an earlier signal. */
++struct kbase_kmod_kcpu_queue {
++   simple_mtx_t lock;
++   uint32_t id;
++   bool wait_unsupported;
++};
++
++void kbase_kmod_csf_kcpu_queue_init(struct kbase_kmod_kcpu_queue *queue);
++/* GPU consumers must be terminated before deleting a queue with pending
++ * commands: KCPU deletion cancels waits but still executes later CQS sets. */
++void kbase_kmod_csf_kcpu_queue_finish(struct pan_kmod_dev *dev,
++                                      struct kbase_kmod_kcpu_queue *queue);
++/* 1: queued; 0: unsupported (use the CPU wait); negative: submission failed. */
++int kbase_kmod_csf_wait_sync_file(struct pan_kmod_dev *dev,
++                                  struct kbase_kmod_kcpu_queue *queue,
++                                  int fd, uint64_t addr, uint64_t value);
+ int kbase_kmod_csf_export_cqs64_fence(struct pan_kmod_dev *dev,
++                                      struct kbase_kmod_kcpu_queue *queue,
+                                       const uint64_t *addrs,
+diff --git a/src/panfrost/vulkan/csf/panvk_queue.h b/src/panfrost/vulkan/csf/panvk_queue.h
+index d1b4e0b..edfa0bf 100644
+--- a/src/panfrost/vulkan/csf/panvk_queue.h
++++ b/src/panfrost/vulkan/csf/panvk_queue.h
+@@ -20,2 +20,5 @@
+ #include "vk_queue.h"
++#ifdef HAVE_PAN_KMOD_KBASE
++#include "lib/kmod/kbase_kmod.h"
++#endif
+ 
+@@ -136,6 +139,4 @@ struct panvk_gpu_queue {
+ #ifdef HAVE_PAN_KMOD_KBASE
+-   /* Per-subqueue completion seqno cells (panvk_cs_sync64 layout), bumped
+-    * by a SYNC_ADD64 at the end of every ring entry and polled by the CPU.
+-    * Must live in GPU-uncached memory: on inner-shareable pages the sync
+-    * write can linger in the GPU L2 where the CPU never sees it. */
++   /* Per-subqueue completion cells, followed by a native-fence wait counter
++    * in the same CSF event BO. CPU readers invalidate its cached mapping. */
+    struct {
+@@ -145,2 +146,6 @@ struct panvk_gpu_queue {
+    } kbase_seqnos;
++   struct kbase_kmod_kcpu_queue kbase_fence_wait;
++   struct kbase_kmod_kcpu_queue kbase_fence_signal;
++   uint64_t kbase_fence_wait_seqno;
++   uint64_t kbase_fence_waits[PANVK_SUBQUEUE_COUNT];
+    uint32_t kbase_tiler_submit_count;
+diff --git a/src/panfrost/vulkan/csf/panvk_vX_gpu_queue.c b/src/panfrost/vulkan/csf/panvk_vX_gpu_queue.c
+index a960824..c5cec9e 100644
+--- a/src/panfrost/vulkan/csf/panvk_vX_gpu_queue.c
++++ b/src/panfrost/vulkan/csf/panvk_vX_gpu_queue.c
+@@ -79,2 +79,6 @@ static_assert(KBASE_STATS_TS_OFFSET(PANVK_SUBQUEUE_COUNT) <= 4096,
+ #define KBASE_CACHELINE_SIZE 64
++/* Keep the wait counter on its own cache line, outside completion cells and
++ * stats. Two KCPU commands per wait fit 64 outstanding waits in its FIFO. */
++#define KBASE_FENCE_WAIT_OFFSET 256
++#define KBASE_FENCE_WAIT_MAX_PENDING 64
+ /* With firmware chunk recycling disarmed (no FRAGMENT_COMPLETED heap ops on
+@@ -230,2 +234,22 @@ kbase_subqueue_seqno_dev_addr(struct panvk_gpu_queue *queue, uint32_t subqueue)
+ 
++static volatile struct panvk_cs_sync64 *
++kbase_fence_wait_cell(struct panvk_gpu_queue *queue)
++{
++   return (volatile struct panvk_cs_sync64 *)
++      ((uint8_t *)queue->kbase_seqnos.cpu + KBASE_FENCE_WAIT_OFFSET);
++}
++
++static VkResult
++kbase_fence_wait_status(struct panvk_gpu_queue *queue)
++{
++   if (!queue->kbase_fence_wait_seqno)
++      return VK_SUCCESS;
++
++   volatile struct panvk_cs_sync64 *cell = kbase_fence_wait_cell(queue);
++   kbase_cache_invalidate_range((const void *)cell, KBASE_CACHELINE_SIZE);
++   if (cell->error)
++      return vk_queue_set_lost(&queue->vk, "kbase: imported native fence failed");
++   return VK_SUCCESS;
++}
++
+ static uint64_t
+@@ -630,2 +654,12 @@ kbase_subqueue_emit_job(struct panvk_gpu_queue *queue, uint32_t subqueue,
+ 
++   if (queue->kbase_fence_waits[subqueue]) {
++      flush_id = 0;
++      cs_move64_to(&b, addr64,
++                   queue->kbase_seqnos.dev + KBASE_FENCE_WAIT_OFFSET);
++      cs_move64_to(&b, val64, queue->kbase_fence_waits[subqueue] - 1);
++      /* Inherit errors into the completion cell and exported fence, rather
++       * than turning an errored input into a successful dependent job. */
++      cs_sync64_wait(&b, false, MALI_CS_CONDITION_GREATER, val64, addr64);
++   }
++
+    /* The heap context can be renewed between synchronous submissions to
+@@ -781,2 +815,3 @@ kbase_subqueue_emit_job(struct panvk_gpu_queue *queue, uint32_t subqueue,
+    subq->kbase.emitted_jobs++;
++   queue->kbase_fence_waits[subqueue] = 0;
+ 
+@@ -886,2 +921,5 @@ kbase_subqueue_wait_seqno(struct panvk_gpu_queue *queue, uint32_t subqueue,
+    while (true) {
++      VkResult wait_status = kbase_fence_wait_status(queue);
++      if (wait_status != VK_SUCCESS)
++         return wait_status;
+       uint64_t insert = *(volatile uint64_t *)(input_page +
+@@ -929,2 +967,10 @@ kbase_subqueue_wait_seqno(struct panvk_gpu_queue *queue, uint32_t subqueue,
+ 
++      /* An unsignalled external fence is not a GPU hang. Keep the caller's
++       * absolute timeout, but start the GPU watchdog after external waits. */
++      if (queue->kbase_fence_wait_seqno &&
++          kbase_fence_wait_cell(queue)->seqno < queue->kbase_fence_wait_seqno) {
++         watchdog = (uint64_t)now + KBASE_WAIT_TIMEOUT_NS;
++         deadline = MIN2(abs_timeout_ns, watchdog);
++      }
++
+       /* Re-kick periodically: a kick can race with an in-flight group
+@@ -2978,4 +3024,4 @@ panvk_queue_submit_init_waits(struct panvk_queue_submit *submit,
+ #ifdef HAVE_PAN_KMOD_KBASE
+-   /* No DRM syncobjs on kbase: semaphore waits are resolved on the CPU
+-    * right before submission instead. */
++   /* kbase resolves local semaphore targets on the GPU and bridges native
++    * sync files through its existing KCPU ABI before ring emission. */
+    if (gpu_queue_uses_kbase(submit->dev))
+@@ -3117,4 +3163,3 @@ panvk_queue_submit_init_signals(struct panvk_queue_submit *submit,
+ #ifdef HAVE_PAN_KMOD_KBASE
+-   /* No DRM syncobjs on kbase: semaphore signals are resolved on the CPU
+-    * after the synchronous wait instead. */
++   /* kbase signals capture completion seqnos instead of DRM syncobjs. */
+    if (gpu_queue_uses_kbase(submit->dev))
+@@ -3244,2 +3289,4 @@ panvk_queue_submit_ioctl_kbase(struct panvk_queue_submit *submit,
+ 
++   bool native_wait = false;
++
+    for (uint32_t w = 0; w < vk_submit->wait_count; w++) {
+@@ -3262,2 +3309,32 @@ panvk_queue_submit_ioctl_kbase(struct panvk_queue_submit *submit,
+ 
++      if (!kbase_gpu_waits_disabled() && wait->wait_value == 0) {
++         volatile struct panvk_cs_sync64 *cell = kbase_fence_wait_cell(queue);
++         while (queue->kbase_fence_wait_seqno - cell->seqno >=
++                KBASE_FENCE_WAIT_MAX_PENDING) {
++            result = kbase_fence_wait_status(queue);
++            if (result != VK_SUCCESS)
++               return result;
++            if (vk_device_is_lost(&dev->vk) ||
++                kbase_kmod_csf_wait_event(dev->kmod.dev, 20000000) < 0)
++               return vk_queue_set_lost(&queue->vk, "kbase: native wait queue failed");
++         }
++
++         if (queue->kbase_fence_wait_seqno == UINT64_MAX)
++            return vk_queue_set_lost(&queue->vk, "kbase: native wait counter overflow");
++         int queued = panvk_kbase_sync_enqueue_wait(
++            wait->sync, dev->kmod.dev, &queue->kbase_fence_wait,
++            queue->kbase_seqnos.dev + KBASE_FENCE_WAIT_OFFSET,
++            queue->kbase_fence_wait_seqno + 1);
++         if (queued < 0)
++            return vk_queue_set_lost(&queue->vk,
++                                     "kbase: native fence enqueue failed (%d)", queued);
++         if (queued) {
++            queue->kbase_fence_wait_seqno++;
++            for (uint32_t i = 0; i < PANVK_SUBQUEUE_COUNT; i++)
++               queue->kbase_fence_waits[i] = queue->kbase_fence_wait_seqno;
++            native_wait = true;
++            continue;
++         }
++      }
++
+       result = vk_sync_wait(&dev->vk, wait->sync, wait->wait_value,
+@@ -3296,2 +3373,16 @@ panvk_queue_submit_ioctl_kbase(struct panvk_queue_submit *submit,
+ 
++   /* A wait-only submit must still advance a GPU completion target. Emit a
++    * gate on otherwise idle subqueues too, so later work cannot bypass it. */
++   for (uint32_t i = 0; native_wait && i < PANVK_SUBQUEUE_COUNT; i++) {
++      if (touched & BITFIELD_BIT(i))
++         continue;
++      result = kbase_subqueue_emit_job(
++         queue, i, 0, 0, 0, submit->phys_dev->kmod.dev->props.gpu_id,
++         queue->kbase_gpu_waits[i]);
++      if (result != VK_SUCCESS)
++         return vk_queue_set_lost(&queue->vk, "kbase: wait-only ring emission failed");
++      memset(queue->kbase_gpu_waits[i], 0, sizeof(queue->kbase_gpu_waits[0]));
++      touched |= BITFIELD_BIT(i);
++   }
++
+    u_foreach_bit(i, touched)
+@@ -3392,3 +3483,4 @@ panvk_queue_submit_process_signals_kbase(struct panvk_queue_submit *submit,
+                                    kbase_wait_sync_targets,
+-                                   submit->kbase_target_seqnos, addrs);
++                                   submit->kbase_target_seqnos, addrs,
++                                   &submit->queue->kbase_fence_signal);
+    }
+@@ -3638,2 +3730,6 @@ panvk_per_arch(create_gpu_queue)(struct panvk_device *dev,
+    const bool uses_kbase = gpu_queue_uses_kbase(dev);
++   if (uses_kbase) {
++      kbase_kmod_csf_kcpu_queue_init(&queue->kbase_fence_wait);
++      kbase_kmod_csf_kcpu_queue_init(&queue->kbase_fence_signal);
++   }
+ #else
+@@ -3714,2 +3810,8 @@ err_destroy_syncobj:
+ err_finish_queue:
++#ifdef HAVE_PAN_KMOD_KBASE
++   if (uses_kbase) {
++      kbase_kmod_csf_kcpu_queue_finish(dev->kmod.dev, &queue->kbase_fence_wait);
++      kbase_kmod_csf_kcpu_queue_finish(dev->kmod.dev, &queue->kbase_fence_signal);
++   }
++#endif
+    vk_queue_finish(&queue->vk);
+@@ -3728,3 +3830,3 @@ panvk_per_arch(destroy_gpu_queue)(struct vk_queue *vk_queue)
+ #ifdef HAVE_PAN_KMOD_KBASE
+-   if (gpu_queue_uses_kbase(dev))
++   if (gpu_queue_uses_kbase(dev) && !vk_device_is_lost(&dev->vk))
+       kbase_queue_wait_current(queue, UINT64_MAX);
+@@ -3734,3 +3836,2 @@ panvk_per_arch(destroy_gpu_queue)(struct vk_queue *vk_queue)
+    panvk_mem_report(dev, true);
+-   cleanup_queue(queue);
+ #ifdef HAVE_PAN_KMOD_KBASE
+@@ -3740,2 +3841,5 @@ panvk_per_arch(destroy_gpu_queue)(struct vk_queue *vk_queue)
+       kbase_destroy_group(queue);
++      kbase_kmod_csf_kcpu_queue_finish(dev->kmod.dev, &queue->kbase_fence_wait);
++      kbase_kmod_csf_kcpu_queue_finish(dev->kmod.dev, &queue->kbase_fence_signal);
++      cleanup_queue(queue);
+       cleanup_tiler(queue);
+@@ -3744,2 +3848,3 @@ panvk_per_arch(destroy_gpu_queue)(struct vk_queue *vk_queue)
+    {
++      cleanup_queue(queue);
+       destroy_group(queue);
+@@ -3767,2 +3872,5 @@ panvk_per_arch(gpu_queue_check_status)(struct vk_queue *vk_queue)
+    if (gpu_queue_uses_kbase(dev)) {
++      VkResult wait_status = kbase_fence_wait_status(queue);
++      if (wait_status != VK_SUCCESS)
++         return wait_status;
+       if (kbase_kmod_csf_has_error(dev->kmod.dev)) {
+diff --git a/src/panfrost/vulkan/jm/panvk_vX_gpu_queue.c b/src/panfrost/vulkan/jm/panvk_vX_gpu_queue.c
+index 6b50d5c..333dedc 100644
+--- a/src/panfrost/vulkan/jm/panvk_vX_gpu_queue.c
++++ b/src/panfrost/vulkan/jm/panvk_vX_gpu_queue.c
+@@ -541,3 +541,3 @@ panvk_per_arch(gpu_queue_submit)(struct vk_queue *vk_queue, struct vk_queue_subm
+    panvk_kbase_sync_set_pending(queue->sync, dev->kmod.dev,
+-                                panvk_jm_kbase_wait_atoms, targets, NULL);
++                                panvk_jm_kbase_wait_atoms, targets, NULL, NULL);
+ 
+@@ -545,3 +545,3 @@ panvk_per_arch(gpu_queue_submit)(struct vk_queue *vk_queue, struct vk_queue_subm
+       panvk_kbase_sync_set_pending(submit->signals[i].sync, dev->kmod.dev,
+-                                   panvk_jm_kbase_wait_atoms, targets, NULL);
++                                   panvk_jm_kbase_wait_atoms, targets, NULL, NULL);
+    }
+diff --git a/src/panfrost/vulkan/panvk_physical_device.c b/src/panfrost/vulkan/panvk_physical_device.c
+index 06c661e..0b9485a 100644
+--- a/src/panfrost/vulkan/panvk_physical_device.c
++++ b/src/panfrost/vulkan/panvk_physical_device.c
+@@ -673,2 +673,3 @@ struct kbase_cpu_sync {
+    uint64_t target_addrs[PANVK_KBASE_SYNC_TARGET_COUNT];
++   struct kbase_kmod_kcpu_queue *export_queue;
+ };
+@@ -694,2 +695,3 @@ kbase_cpu_sync_init(struct vk_device *device, struct vk_sync *sync,
+    ks->pending_wait = NULL;
++   ks->export_queue = NULL;
+    memset(ks->targets, 0, sizeof(ks->targets));
+@@ -752,3 +754,4 @@ panvk_kbase_sync_set_pending(
+    const uint64_t targets[PANVK_KBASE_SYNC_TARGET_COUNT],
+-   const uint64_t target_addrs[PANVK_KBASE_SYNC_TARGET_COUNT])
++   const uint64_t target_addrs[PANVK_KBASE_SYNC_TARGET_COUNT],
++   struct kbase_kmod_kcpu_queue *export_queue)
+ {
+@@ -765,2 +768,3 @@ panvk_kbase_sync_set_pending(
+    ks->pending_wait = wait;
++   ks->export_queue = export_queue;
+    memcpy(ks->targets, targets, sizeof(ks->targets));
+@@ -970,2 +974,3 @@ kbase_cpu_sync_move(UNUSED struct vk_device *device, struct vk_sync *dst,
+    ks_dst->pending_wait = ks_src->pending_wait;
++   ks_dst->export_queue = ks_src->export_queue;
+    memcpy(ks_dst->targets, ks_src->targets, sizeof(ks_dst->targets));
+@@ -1042,2 +1047,24 @@ kbase_sync_file_waiter_free(struct kbase_cpu_sync *ks)
+ 
++int
++panvk_kbase_sync_enqueue_wait(struct vk_sync *sync, struct pan_kmod_dev *dev,
++                               struct kbase_kmod_kcpu_queue *queue,
++                               uint64_t addr, uint64_t value)
++{
++   if (sync->type->wait_many != kbase_cpu_sync_wait_many)
++      return 0;
++
++   struct kbase_cpu_sync *ks = container_of(sync, struct kbase_cpu_sync, sync);
++   int ret = 0;
++   mtx_lock(&ks->mutex);
++   if (ks->state == KBASE_CPU_SYNC_PENDING &&
++       ks->pending_wait == kbase_sync_file_wait_func) {
++      struct kbase_sync_file_waiter *waiter = ks->pending_data;
++      /* Enqueue under the payload lock, before the runtime destroys its
++       * temporary import. The kernel holds the fence reference afterwards. */
++      ret = kbase_kmod_csf_wait_sync_file(dev, queue, waiter->fd, addr, value);
++   }
++   mtx_unlock(&ks->mutex);
++   return ret;
++}
++
+ static VkResult
+@@ -1072,3 +1099,3 @@ kbase_cpu_sync_import_sync_file(struct vk_device *device,
+    panvk_kbase_sync_set_pending(sync, waiter, kbase_sync_file_wait_func, targets,
+-                                NULL);
++                                NULL, NULL);
+ 
+@@ -1088,2 +1115,3 @@ kbase_cpu_sync_export_sync_file(struct vk_device *device,
+    int fd;
++   struct kbase_kmod_kcpu_queue *export_queue;
+ 
+@@ -1095,2 +1123,3 @@ kbase_cpu_sync_export_sync_file(struct vk_device *device,
+    mtx_lock(&ks->mutex);
++   export_queue = ks->export_queue;
+    if (ks->state == KBASE_CPU_SYNC_PENDING ||
+@@ -1099,2 +1128,3 @@ kbase_cpu_sync_export_sync_file(struct vk_device *device,
+          struct kbase_sync_file_waiter *waiter = ks->pending_data;
++         count = 1;
+          fd = dup(waiter->fd);
+@@ -1124,7 +1154,9 @@ kbase_cpu_sync_export_sync_file(struct vk_device *device,
+ 
+-   fd = kbase_kmod_csf_export_cqs64_fence(dev->kmod.dev, addrs, vals,
+-                                          count);
++   /* -1 is the Vulkan SYNC_FD representation of an already-signalled
++    * payload. Pending GPU work has its own queue, never a device-wide FIFO. */
++   fd = count ? kbase_kmod_csf_export_cqs64_fence(
++                   dev->kmod.dev, export_queue, addrs, vals, count) : -1;
+ 
+ out:
+-   if (fd < 0) {
++   if (fd < 0 && count) {
+       if (errno == EMFILE || errno == ENFILE)
+diff --git a/src/panfrost/vulkan/panvk_physical_device.h b/src/panfrost/vulkan/panvk_physical_device.h
+index fd102fa..2e07be4 100644
+--- a/src/panfrost/vulkan/panvk_physical_device.h
++++ b/src/panfrost/vulkan/panvk_physical_device.h
+@@ -119,2 +119,4 @@ VkResult panvk_physical_device_init_kbase(struct panvk_physical_device *device,
+ 
++struct kbase_kmod_kcpu_queue;
++
+ typedef VkResult (*panvk_kbase_sync_wait_func)(
+@@ -127,3 +129,4 @@ void panvk_kbase_sync_set_pending(
+    const uint64_t targets[PANVK_KBASE_SYNC_TARGET_COUNT],
+-   const uint64_t target_addrs[PANVK_KBASE_SYNC_TARGET_COUNT]);
++   const uint64_t target_addrs[PANVK_KBASE_SYNC_TARGET_COUNT],
++   struct kbase_kmod_kcpu_queue *export_queue);
+ 
+@@ -134,2 +137,6 @@ int panvk_kbase_sync_gpu_wait_targets(
+    struct vk_sync *sync, uint64_t out[PANVK_KBASE_SYNC_TARGET_COUNT]);
++
++int panvk_kbase_sync_enqueue_wait(struct vk_sync *sync, struct pan_kmod_dev *dev,
++                                  struct kbase_kmod_kcpu_queue *queue,
++                                  uint64_t addr, uint64_t value);
+ #endif
