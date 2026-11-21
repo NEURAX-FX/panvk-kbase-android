@@ -1,0 +1,254 @@
+From 3be654701a9c11f3d5ba15bc049f548068960f2e Mon Sep 17 00:00:00 2001
+From: PanVK WSI Debug <debug@localhost>
+Date: Sun, 15 Nov 2026 23:04:54 +0800
+Subject: [PATCH] panvk/kbase: scope GPU-uncached imports to Anland staging
+ slots
+
+Match the DMA-BUF identity on the importing thread and expose a scoped import hook to the compositor. Keep the cache policy unchanged for all other imports.
+---
+ src/panfrost/lib/kmod/kbase_kmod.c   | 59 ++++++++++++++++++++++++++++
+ src/panfrost/lib/kmod/kbase_kmod.h   |  4 ++
+ src/panfrost/lib/kmod/meson.build    | 11 +++++-
+ src/panfrost/vulkan/meson.build      | 18 +++++++--
+ src/panfrost/vulkan/panvk-kbase.sym  | 10 +++++
+ src/panfrost/vulkan/panvk_instance.c | 12 ++++++
+ src/panfrost/vulkan/panvk_instance.h |  4 ++
+ 7 files changed, 114 insertions(+), 4 deletions(-)
+ create mode 100644 src/panfrost/vulkan/panvk-kbase.sym
+
+diff --git a/src/panfrost/lib/kmod/kbase_kmod.c b/src/panfrost/lib/kmod/kbase_kmod.c
+index aad56a3..cbc7a57 100644
+--- a/src/panfrost/lib/kmod/kbase_kmod.c
++++ b/src/panfrost/lib/kmod/kbase_kmod.c
+@@ -52,6 +52,11 @@
+ #include <dlfcn.h>
+ #endif
+ 
++#ifdef HAVE_PANVK_KBASE_SCOPED_IMPORT
++#include <sys/stat.h>
++#include "util/u_thread.h"
++#endif
++
+ #include "util/macros.h"
+ #include "util/os_time.h"
+ #include "util/u_atomic.h"
+@@ -2528,6 +2533,43 @@ kbase_kmod_bo_import_host(struct pan_kmod_dev *dev, void *host_ptr,
+    return &kbase_bo->base;
+ }
+ 
++#ifdef HAVE_PANVK_KBASE_SCOPED_IMPORT
++static __THREAD_INITIAL_EXEC struct kbase_import_scope {
++   dev_t dev;
++   ino_t ino;
++   bool active;
++   bool observed;
++} kbase_import_scope;
++
++int
++kbase_kmod_scoped_gpu_uncached_import(int fd)
++{
++   if (fd == -1) {
++      if (!kbase_import_scope.active)
++         return -EINVAL;
++
++      kbase_import_scope.active = false;
++      return kbase_import_scope.observed;
++   }
++
++   if (fd < 0)
++      return -EINVAL;
++   if (kbase_import_scope.active)
++      return -EBUSY;
++
++   struct stat st;
++   if (fstat(fd, &st) < 0)
++      return -errno;
++
++   kbase_import_scope = (struct kbase_import_scope){
++      .dev = st.st_dev,
++      .ino = st.st_ino,
++      .active = true,
++   };
++   return 0;
++}
++#endif
++
+ static struct pan_kmod_bo *
+ kbase_kmod_import_dmabuf(struct pan_kmod_dev *dev,
+                          struct pan_kmod_vm *exclusive_vm, int fd,
+@@ -2568,6 +2610,18 @@ kbase_kmod_import_dmabuf(struct pan_kmod_dev *dev,
+    if (set_env && set_env[0])
+       import_flags |= strtoull(set_env, NULL, 0);
+ 
++#ifdef HAVE_PANVK_KBASE_SCOPED_IMPORT
++   bool scoped_gpu_uncached = false;
++   if (unlikely(kbase_import_scope.active) && external_import) {
++      struct stat st;
++      scoped_gpu_uncached = fstat(kbase_bo->dmabuf_fd, &st) == 0 &&
++                            st.st_dev == kbase_import_scope.dev &&
++                            st.st_ino == kbase_import_scope.ino;
++      if (scoped_gpu_uncached)
++         import_flags |= BASE_MEM_UNCACHED_GPU;
++   }
++#endif
++
+    int import_fd = kbase_bo->dmabuf_fd;
+    union kbase_ioctl_mem_import req = {
+       .in = {
+@@ -2719,6 +2773,11 @@ kbase_kmod_import_dmabuf(struct pan_kmod_dev *dev,
+              (unsigned long long)req.out.gpu_va,
+              (unsigned long long)req.out.va_pages,
+              (unsigned long long)req.out.flags);
++#ifdef HAVE_PANVK_KBASE_SCOPED_IMPORT
++   if (scoped_gpu_uncached &&
++       (!req.out.flags || (req.out.flags & BASE_MEM_UNCACHED_GPU)))
++      kbase_import_scope.observed = true;
++#endif
+    return &kbase_bo->base;
+ 
+ err_unmap_gpu:
+diff --git a/src/panfrost/lib/kmod/kbase_kmod.h b/src/panfrost/lib/kmod/kbase_kmod.h
+index 223a2cf..1782cf9 100644
+--- a/src/panfrost/lib/kmod/kbase_kmod.h
++++ b/src/panfrost/lib/kmod/kbase_kmod.h
+@@ -64,6 +64,10 @@ uint64_t kbase_kmod_bo_committed_size(struct pan_kmod_dev *dev,
+ struct pan_kmod_bo *kbase_kmod_bo_import_host(struct pan_kmod_dev *dev,
+                                             void *host_ptr, uint64_t size);
+ 
++#ifdef HAVE_PANVK_KBASE_SCOPED_IMPORT
++int kbase_kmod_scoped_gpu_uncached_import(int fd);
++#endif
++
+ /* CSF interface information for a kbase CSF device, presented in the
+  * panthor uAPI layout so CSF-generic code can consume either backend.
+  * Filled from KBASE_IOCTL_CS_GET_GLB_IFACE at device-create time.
+diff --git a/src/panfrost/lib/kmod/meson.build b/src/panfrost/lib/kmod/meson.build
+index a80de4e..ec586b6 100644
+--- a/src/panfrost/lib/kmod/meson.build
++++ b/src/panfrost/lib/kmod/meson.build
+@@ -11,11 +11,20 @@ if panfrost_kmds.contains('kbase')
+   libpankmod_lib_files += files('kbase_kmod.c')
+ endif
+ 
++with_panvk_kbase_scoped_import = (
++  with_panfrost_vk and not with_platform_android and panfrost_kmds.contains('kbase')
++  and cc.get_define('__GLIBC__', prefix : '#include <stdlib.h>') != ''
++)
++panvk_kbase_scoped_import_args = []
++if with_panvk_kbase_scoped_import
++  panvk_kbase_scoped_import_args += '-DHAVE_PANVK_KBASE_SCOPED_IMPORT'
++endif
++
+ libpankmod_lib = static_library(
+   'pankmod_lib',
+   [libpankmod_lib_files],
+   include_directories : [inc_include, inc_src, inc_panfrost],
+-  c_args : [no_override_init_args],
++  c_args : [no_override_init_args, panvk_kbase_scoped_import_args],
+   gnu_symbol_visibility : 'hidden',
+   dependencies: [dep_libdrm, idep_mesautil, idep_pan_packers, libpanfrost_model_dep],
+   build_by_default : false,
+diff --git a/src/panfrost/vulkan/meson.build b/src/panfrost/vulkan/meson.build
+index 947ee79..3b52e59 100644
+--- a/src/panfrost/vulkan/meson.build
++++ b/src/panfrost/vulkan/meson.build
+@@ -210,6 +210,17 @@ if with_platform_android
+   libpanvk_files += files('panvk_android.c')
+ endif
+ 
++panvk_icd_link_args = vulkan_icd_link_args
++panvk_icd_link_depends = vulkan_icd_link_depends
++panvk_symbols_check_args = []
++if with_panvk_kbase_scoped_import
++  if with_ld_version_script
++    panvk_icd_link_args = ['-Wl,--version-script', join_paths(meson.current_source_dir(), 'panvk-kbase.sym')]
++    panvk_icd_link_depends = files('panvk-kbase.sym')
++  endif
++  panvk_symbols_check_args += ['--ignore-symbol', 'panvk_kbase_scoped_gpu_uncached_import']
++endif
++
+ libvulkan_panfrost = shared_library(
+   'vulkan_panfrost',
+   [libpanvk_files, panvk_entrypoints, panvk_tracepoints, panvk_drirc],
+@@ -241,9 +252,9 @@ libvulkan_panfrost = shared_library(
+     idep_vulkan_wsi,
+     idep_mesautil,
+   ],
+-  c_args : [no_override_init_args, panvk_flags, soong_compat_c_args],
+-  link_args : [vulkan_icd_link_args, ld_args_bsymbolic, ld_args_gc_sections, ld_args_build_id],
+-  link_depends: vulkan_icd_link_depends,
++  c_args : [no_override_init_args, panvk_flags, soong_compat_c_args, panvk_kbase_scoped_import_args],
++  link_args : [panvk_icd_link_args, ld_args_bsymbolic, ld_args_gc_sections, ld_args_build_id],
++  link_depends: panvk_icd_link_depends,
+   gnu_symbol_visibility : 'hidden',
+   install : true,
+ )
+@@ -257,6 +268,7 @@ if with_symbols_check
+       '--lib', libvulkan_panfrost,
+       '--symbols-file', vulkan_icd_symbols,
+       symbols_check_args,
++      panvk_symbols_check_args,
+     ],
+     suite : ['panfrost'],
+   )
+diff --git a/src/panfrost/vulkan/panvk-kbase.sym b/src/panfrost/vulkan/panvk-kbase.sym
+new file mode 100644
+index 0000000..cd6747a
+--- /dev/null
++++ b/src/panfrost/vulkan/panvk-kbase.sym
+@@ -0,0 +1,10 @@
++{
++	global:
++		vk_icdGetInstanceProcAddr;
++		vk_icdGetPhysicalDeviceProcAddr;
++		vk_icdNegotiateLoaderICDInterfaceVersion;
++		panvk_kbase_scoped_gpu_uncached_import;
++
++	local:
++		*;
++};
+diff --git a/src/panfrost/vulkan/panvk_instance.c b/src/panfrost/vulkan/panvk_instance.c
+index 698d343..6ea46e7 100644
+--- a/src/panfrost/vulkan/panvk_instance.c
++++ b/src/panfrost/vulkan/panvk_instance.c
+@@ -22,6 +22,10 @@
+ #include <unistd.h>
+ #endif
+ 
++#ifdef HAVE_PANVK_KBASE_SCOPED_IMPORT
++#include "lib/kmod/kbase_kmod.h"
++#endif
++
+ #include "vk_alloc.h"
+ #include "vk_log.h"
+ 
+@@ -465,3 +469,11 @@ vk_icdGetInstanceProcAddr(VkInstance instance, const char *pName)
+ {
+    return panvk_GetInstanceProcAddr(instance, pName);
+ }
++
++#ifdef HAVE_PANVK_KBASE_SCOPED_IMPORT
++PUBLIC int
++panvk_kbase_scoped_gpu_uncached_import(int fd)
++{
++   return kbase_kmod_scoped_gpu_uncached_import(fd);
++}
++#endif
+diff --git a/src/panfrost/vulkan/panvk_instance.h b/src/panfrost/vulkan/panvk_instance.h
+index ec1544e..3fe320c 100644
+--- a/src/panfrost/vulkan/panvk_instance.h
++++ b/src/panfrost/vulkan/panvk_instance.h
+@@ -53,6 +53,10 @@ enum panvk_debug_flags {
+ 
+ extern uint64_t panvk_debug;
+ 
++#ifdef HAVE_PANVK_KBASE_SCOPED_IMPORT
++int panvk_kbase_scoped_gpu_uncached_import(int fd);
++#endif
++
+ #if defined(VK_USE_PLATFORM_WAYLAND_KHR) || \
+     defined(VK_USE_PLATFORM_XCB_KHR) || \
+     defined(VK_USE_PLATFORM_XLIB_KHR) || \
+-- 
+2.56.0
+
