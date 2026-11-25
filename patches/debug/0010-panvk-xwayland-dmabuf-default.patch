@@ -1,0 +1,360 @@
+From: NEURAX-FX <234716687+NEURAX-FX@users.noreply.github.com>
+Subject: [PATCH] panvk/wsi: default to DRI3 dma-buf on kbase Xwayland
+
+Let kbase use the existing standard DRI3 dma-buf path on Xwayland with
+DRI3 and Present, without setting PANVK_KBASE_DRI3. Keep the CPU path on
+other X servers and leave the Wayland default and raw-FD overrides alone.
+PANVK_KBASE_DRI3=0 or MESA_VK_WSI_DEBUG=sw forces CPU presentation on X11.
+
+Record the configured image type after initialization clears image_info,
+so DRI3 images use pixmap presentation and the implicit-sync path.
+
+Generated-by: LLM
+---
+diff --git a/src/panfrost/vulkan/panvk_wsi.c b/src/panfrost/vulkan/panvk_wsi.c
+--- a/src/panfrost/vulkan/panvk_wsi.c
++++ b/src/panfrost/vulkan/panvk_wsi.c
+@@ -716,30 +716,23 @@
+       termux_raw_dri3 ||
+       (uses_kbase && dri3_option &&
+        (!strcmp(dri3_option, "raw") || !strcmp(dri3_option, "termux")));
+-   const bool kbase_dmabuf =
++   const bool kbase_can_export_dmabuf =
+ #if defined(HAVE_PAN_KMOD_KBASE)
+-      uses_kbase &&
+-      ((!dri3_option && termux_raw_dri3) ||
+-       (dri3_option && strcmp(dri3_option, "0") != 0)) &&
+-      kbase_kmod_supports_dmabuf(physical_device->kmod.dev);
++      uses_kbase && kbase_kmod_supports_dmabuf(physical_device->kmod.dev);
+ #else
+       false;
+ #endif
+-   /* The CPU readback (sw) path copies every frame twice on Wayland: GPU
+-    * image -> readback buffer -> wl_shm, then the compositor uploads the SHM
+-    * buffer again.  kbase dma-heap BOs can be shared with the compositor
+-    * instead (MT6989 niri/Anland, 2392x1080 glmark2: ~100-135 -> 280-420), so
+-    * Wayland uses linux-dmabuf while X11 keeps MIT-SHM, whose servers
+-    * (Xvfb, Termux:X11) cannot import these buffers.
+-    * PANVK_WSI_WAYLAND_DMABUF=0 restores wl_shm. */
++   const bool kbase_dmabuf =
++      kbase_can_export_dmabuf &&
++      (termux_raw_dri3 || (dri3_option && strcmp(dri3_option, "0") != 0));
++   /* Without an override, use DRI3 only on capable Xwayland connections.
++    * Keep other X11 servers on the CPU path: some advertise DRI3 but cannot
++    * import our dma-bufs. PANVK_KBASE_DRI3=0 disables this default. */
++   const bool xwayland_dmabuf =
++      kbase_can_export_dmabuf && !dri3_option && !termux_raw_dri3;
+    const bool wayland_dmabuf =
+-#if defined(HAVE_PAN_KMOD_KBASE)
+-      uses_kbase && !kbase_dmabuf &&
+-      debug_get_bool_option("PANVK_WSI_WAYLAND_DMABUF", true) &&
+-      kbase_kmod_supports_dmabuf(physical_device->kmod.dev);
+-#else
+-      false;
+-#endif
++      kbase_can_export_dmabuf && !kbase_dmabuf &&
++      debug_get_bool_option("PANVK_WSI_WAYLAND_DMABUF", true);
+    VkResult result;
+ 
+    result = wsi_device_init(&physical_device->wsi_device,
+@@ -752,6 +745,7 @@
+                                 * fourth image when the server is Xwayland. */
+                                .extra_xwayland_image =
+                                   kbase_dmabuf && kbase_raw_dri3,
++                               .xwayland_dmabuf = xwayland_dmabuf,
+                                .wayland_dmabuf = wayland_dmabuf,
+                             });
+    if (result != VK_SUCCESS)
+@@ -763,14 +757,11 @@
+     */
+    physical_device->wsi_device.disable_unordered_submits = uses_kbase;
+ 
+-   /* kbase is not a DRM fd.  The default CPU WSI path presents through
+-    * MIT-SHM.  Android dma-heaps can also provide shareable
+-    * allocations, but some Android X servers advertise DRI3 while rejecting
+-    * standard PixmapFromBuffer.  PANVK_KBASE_DRI3=raw (or termux) uses the
+-    * Termux:X11/Winlator private raw-FD modifier instead of DRM modifiers.
+-    */
++   /* PANVK_KBASE_DRI3=raw (or termux) uses the Termux:X11/Winlator private
++    * raw-FD transport instead of negotiating DRM modifiers. */
+    physical_device->wsi_device.supports_modifiers =
+-      !uses_kbase || (kbase_dmabuf && !kbase_raw_dri3) || wayland_dmabuf;
++      !uses_kbase || (kbase_dmabuf && !kbase_raw_dri3) || wayland_dmabuf ||
++      xwayland_dmabuf;
+    physical_device->wsi_device.can_present_on_device =
+       panvk_can_present_on_device;
+ 
+diff --git a/src/vulkan/wsi/wsi_common.c b/src/vulkan/wsi/wsi_common.c
+--- a/src/vulkan/wsi/wsi_common.c
++++ b/src/vulkan/wsi/wsi_common.c
+@@ -93,6 +93,8 @@
+    wsi->sw = device_options->sw_device || (WSI_DEBUG & WSI_DEBUG_SW);
+    wsi->wants_linear = (WSI_DEBUG & WSI_DEBUG_LINEAR) != 0;
+    wsi->x11.extra_xwayland_image = device_options->extra_xwayland_image;
++   wsi->x11.xwayland_dmabuf = device_options->xwayland_dmabuf &&
++                             !(WSI_DEBUG & WSI_DEBUG_SW);
+    wsi->wayland.disable_timestamps = (WSI_DEBUG & WSI_DEBUG_NOWLTS) != 0;
+    wsi->wayland.dmabuf = device_options->wayland_dmabuf &&
+                          !(WSI_DEBUG & WSI_DEBUG_SW);
+@@ -224,7 +226,7 @@
+    WSI_GET_CB(GetImageDrmFormatModifierPropertiesEXT);
+    WSI_GET_CB(GetImageMemoryRequirements);
+    WSI_GET_CB(GetImageSubresourceLayout);
+-   if (!wsi->sw || wsi->wayland.dmabuf)
++   if (!wsi->sw || wsi->wayland.dmabuf || wsi->x11.xwayland_dmabuf)
+       WSI_GET_CB(GetMemoryFdKHR);
+    WSI_GET_CB(GetPhysicalDeviceCalibrateableTimeDomainsKHR);
+    WSI_GET_CB(GetPhysicalDeviceProperties);
+@@ -463,7 +465,6 @@
+                 const struct wsi_base_image_params *params,
+                 struct wsi_image_info *info)
+ {
+-   info->image_type = params->image_type;
+    info->color_space = pCreateInfo->imageColorSpace;
+ 
+    switch (params->image_type) {
+@@ -585,6 +586,7 @@
+                             &chain->image_info);
+    if (result != VK_SUCCESS)
+       goto fail;
++   chain->image_info.image_type = image_params->image_type;
+ 
+ #ifdef HAVE_LIBDRM
+    result = wsi_drm_init_swapchain_implicit_sync(chain);
+diff --git a/src/vulkan/wsi/wsi_common.h b/src/vulkan/wsi/wsi_common.h
+--- a/src/vulkan/wsi/wsi_common.h
++++ b/src/vulkan/wsi/wsi_common.h
+@@ -133,6 +133,9 @@
+       /* adds an extra minImageCount when running under xwayland */
+       bool extra_xwayland_image;
+ 
++      /* Allow dma-buf presentation on Xwayland even when sw is set. */
++      bool xwayland_dmabuf;
++
+       /* Never report VK_SUBOPTIMAL_KHR. Used to workaround
+        * games that cannot handle SUBOPTIMAL correctly. */
+       bool ignore_suboptimal;
+@@ -289,6 +292,7 @@
+ struct wsi_device_options {
+    bool sw_device;
+    bool extra_xwayland_image;
++   bool xwayland_dmabuf;
+    /* See wsi_device::wayland.dmabuf. */
+    bool wayland_dmabuf;
+    bool emulate_24as32;
+diff --git a/src/vulkan/wsi/wsi_common_drm.c b/src/vulkan/wsi/wsi_common_drm.c
+--- a/src/vulkan/wsi/wsi_common_drm.c
++++ b/src/vulkan/wsi/wsi_common_drm.c
+@@ -373,10 +373,7 @@
+    if (chain->image_info.explicit_sync)
+       return VK_SUCCESS;
+ 
+-   /* CPU images (sw readback) have no dma-buf to attach a sync file to.
+-    * This matters once a sw device exports memory for another platform
+-    * (wsi_device::wayland.dmabuf): its X11 swapchains are still CPU ones.
+-    */
++   /* CPU readback images have no dma-buf to attach a sync file to. */
+    if (chain->image_info.image_type != WSI_IMAGE_TYPE_DRM)
+       return VK_SUCCESS;
+ 
+diff --git a/src/vulkan/wsi/wsi_common_x11.c b/src/vulkan/wsi/wsi_common_x11.c
+--- a/src/vulkan/wsi/wsi_common_x11.c
++++ b/src/vulkan/wsi/wsi_common_x11.c
+@@ -92,6 +92,7 @@
+ };
+ 
+ struct wsi_x11_connection {
++   bool sw;
+    bool has_dri3;
+    bool has_dri3_modifiers;
+    bool has_dri3_explicit_sync;
+@@ -244,13 +245,10 @@
+                           xcb_connection_t *conn)
+ {
+    xcb_query_extension_cookie_t dri3_cookie, pres_cookie, randr_cookie,
+-                                amd_cookie, nv_cookie, shm_cookie, sync_cookie,
++                                amd_cookie, nv_cookie, sync_cookie,
+                                 xfixes_cookie, xwl_cookie;
+    xcb_query_extension_reply_t *dri3_reply, *pres_reply, *randr_reply,
+-                               *amd_reply, *nv_reply, *shm_reply = NULL,
+-                               *xfixes_reply, *xwl_reply;
+-   bool wants_shm = wsi_dev->sw && !(WSI_DEBUG & WSI_DEBUG_NOSHM) &&
+-                    wsi_dev->has_import_memory_host;
++                               *amd_reply, *nv_reply, *xfixes_reply, *xwl_reply;
+    bool has_dri3_v1_2 = false;
+    bool has_present_v1_2 = false;
+    bool has_dri3_v1_4 = false;
+@@ -273,9 +271,6 @@
+    xfixes_cookie = xcb_query_extension(conn, 6, "XFIXES");
+    xwl_cookie = xcb_query_extension(conn, 8, "XWAYLAND");
+ 
+-   if (wants_shm)
+-      shm_cookie = xcb_query_extension(conn, 7, "MIT-SHM");
+-
+    /* We try to be nice to users and emit a warning if they try to use a
+     * Vulkan application on a system without DRI3 enabled.  However, this ends
+     * up spewing the warning when a user has, for example, both Intel
+@@ -296,8 +291,6 @@
+    nv_reply = xcb_query_extension_reply(conn, nv_cookie, NULL);
+    xfixes_reply = xcb_query_extension_reply(conn, xfixes_cookie, NULL);
+    xwl_reply = xcb_query_extension_reply(conn, xwl_cookie, NULL);
+-   if (wants_shm)
+-      shm_reply = xcb_query_extension_reply(conn, shm_cookie, NULL);
+    if (!dri3_reply || !pres_reply || !xfixes_reply) {
+       free(dri3_reply);
+       free(pres_reply);
+@@ -306,8 +299,6 @@
+       free(randr_reply);
+       free(amd_reply);
+       free(nv_reply);
+-      if (wants_shm)
+-         free(shm_reply);
+       vk_free(&wsi_dev->instance_alloc, wsi_conn);
+       return NULL;
+    }
+@@ -357,6 +348,12 @@
+ 
+    wsi_conn->is_xwayland = wsi_x11_detect_xwayland(conn, randr_reply,
+                                                    xwl_reply);
++   wsi_conn->sw = wsi_dev->sw;
++#ifdef HAVE_X11_DRM
++   if (wsi_dev->x11.xwayland_dmabuf && wsi_conn->is_xwayland &&
++       wsi_conn->has_dri3 && wsi_conn->has_present)
++      wsi_conn->sw = false;
++#endif
+    wsi_conn->has_randr = randr_reply && randr_reply->present;
+ 
+    wsi_conn->has_dri3_modifiers = has_dri3_v1_2 && has_present_v1_2;
+@@ -369,9 +366,9 @@
+ 
+    wsi_conn->has_mit_shm = false;
+ #if defined(HAVE_X11_DRM) && defined(HAVE_SYS_SHM_H)
+-   if (wsi_conn->has_dri3 && wsi_conn->has_present && wants_shm) {
++   if (wsi_conn->sw && wsi_conn->has_dri3 && wsi_conn->has_present &&
++       wsi_dev->has_import_memory_host && !(WSI_DEBUG & WSI_DEBUG_NOSHM))
+       wsi_conn->has_mit_shm = x11_xcb_display_supports_xshm(conn, NULL);
+-   }
+ #endif
+ 
+    list_inithead(&wsi_conn->screen_resources_list);
+@@ -396,8 +393,6 @@
+    free(amd_reply);
+    free(nv_reply);
+    free(xfixes_reply);
+-   if (wants_shm)
+-      free(shm_reply);
+ 
+    return wsi_conn;
+ }
+@@ -660,7 +655,7 @@
+    if (!wsi_conn)
+       return false;
+ 
+-   if (!wsi_device->sw) {
++   if (!wsi_conn->sw) {
+       if (!wsi_x11_check_for_dri3(wsi_conn))
+          return false;
+    }
+@@ -735,7 +730,7 @@
+    if (!wsi_conn)
+       return VK_ERROR_OUT_OF_HOST_MEMORY;
+ 
+-   if (!wsi_device->sw) {
++   if (!wsi_conn->sw) {
+       if (!wsi_x11_check_for_dri3(wsi_conn)) {
+          *pSupported = false;
+          return VK_SUCCESS;
+@@ -944,7 +939,7 @@
+          /* The CPU copy present (x11_present_to_x11_sw) never reports a
+           * present stage, so timing requests would never complete. */
+          if ((!wsi_device->has_host_query_reset && !wsi_conn->is_xwayland) ||
+-             (wsi_device->sw && !wsi_conn->has_mit_shm)) {
++             (wsi_conn->sw && !wsi_conn->has_mit_shm)) {
+             /* X11 can sometimes COMPLETE before the GPU is even done.
+              * In this case, we need to observe a reset timestamp when polling,
+              * which requires host query resets. On Xwayland, this cannot happen,
+@@ -1407,6 +1402,12 @@
+ VK_DEFINE_NONDISP_HANDLE_CASTS(x11_swapchain, base.base, VkSwapchainKHR,
+                                VK_OBJECT_TYPE_SWAPCHAIN_KHR)
+ 
++static inline bool
++x11_swapchain_uses_cpu(const struct x11_swapchain *chain)
++{
++   return chain->base.image_info.image_type == WSI_IMAGE_TYPE_CPU;
++}
++
+ static bool x11_refresh_rate_estimate_is_stable(struct x11_swapchain *swapchain, uint64_t base_rate)
+ {
+    /* Only accept a refresh rate estimate if it's *very* stable.
+@@ -2547,7 +2548,7 @@
+    x11_capture_trace(chain);
+ 
+    VkResult result;
+-   if (chain->base.wsi->sw && !chain->has_mit_shm)
++   if (x11_swapchain_uses_cpu(chain) && !chain->has_mit_shm)
+       result = x11_present_to_x11_sw(chain, image_index);
+    else
+ #ifdef HAVE_X11_DRM
+@@ -3035,7 +3036,7 @@
+       /* sw images are read by the CPU (X server or XPutImage): wait for the
+        * blit here instead of in vkQueuePresentKHR. */
+       bool need_fence_wait =
+-            (chain->base.wsi->sw ||
++            (x11_swapchain_uses_cpu(chain) ||
+              x11_needs_wait_for_fences(chain->base.wsi, wsi_conn, present_mode)) &&
+             !chain->base.image_info.explicit_sync;
+ 
+@@ -3226,7 +3227,7 @@
+       return result;
+ 
+    image->update_region = None;
+-   if (chain->base.wsi->sw && !chain->has_mit_shm) {
++   if (x11_swapchain_uses_cpu(chain) && !chain->has_mit_shm) {
+       /* Any failure drops the whole chain back to PutImage. */
+       if (chain->sw_shm && !x11_image_init_sw_shm(chain, image))
+          chain->sw_shm = false;
+@@ -3241,7 +3242,7 @@
+    image->update_region = xcb_generate_id(chain->conn);
+    xcb_xfixes_create_region(chain->conn, image->update_region, 0, NULL);
+ 
+-   if (chain->base.wsi->sw) {
++   if (x11_swapchain_uses_cpu(chain)) {
+       image->shmseg = xcb_generate_id(chain->conn);
+ 
+       xcb_shm_attach(chain->conn,
+@@ -3383,7 +3384,7 @@
+                  struct x11_image *image)
+ {
+    xcb_void_cookie_t cookie;
+-   if (!chain->base.wsi->sw || chain->has_mit_shm) {
++   if (!x11_swapchain_uses_cpu(chain) || chain->has_mit_shm) {
+ #ifdef HAVE_X11_DRM
+       cookie = xcb_sync_destroy_fence(chain->conn, image->sync_fence);
+       xcb_discard_reply(chain->conn, cookie.sequence);
+@@ -3522,7 +3523,7 @@
+ {
+    const struct wsi_device *wsi_device = chain->base.wsi;
+ 
+-   if (wsi_device->sw || !use_modifiers(wsi_device))
++   if (x11_swapchain_uses_cpu(chain) || !use_modifiers(wsi_device))
+       return false;
+ 
+    struct wsi_drm_image_params drm_image_params;
+@@ -3816,7 +3817,7 @@
+    struct wsi_base_image_params *image_params = NULL;
+    struct wsi_cpu_image_params cpu_image_params;
+    uint64_t *modifiers[2] = {NULL, NULL};
+-   if (wsi_device->sw) {
++   if (wsi_conn->sw) {
+       cpu_image_params = (struct wsi_cpu_image_params) {
+          .base.image_type = WSI_IMAGE_TYPE_CPU,
+          .alloc_shm = wsi_conn->has_mit_shm ? &alloc_shm : NULL,
+@@ -3890,7 +3891,7 @@
+    chain->has_async_may_tear = present_caps & XCB_PRESENT_CAPABILITY_ASYNC_MAY_TEAR;
+    chain->has_reliable_msc = !wsi_conn->is_xwayland;
+ 
+-   if (wsi_device->sw && !chain->has_mit_shm) {
++   if (wsi_conn->sw && !chain->has_mit_shm) {
+       chain->sw_shm = x11_sw_shm_supported(conn);
+       /* The X server's Present (if any) gives no real vblank here; the
+        * launcher passes the display refresh rate. Unset = unpaced FIFO. */

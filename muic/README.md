@@ -13,7 +13,7 @@ SHA-256:
 `0002-anland-android-vulkan-output.patch`: `1efc20bb821681ef38506b777d480b6bee35c2e210d597315d5b7b255b13a4f6`
 `0003-panvk-csf-native-fence-waits.patch`: `ac8ec4ce20ecb2b5d4e36ef1af94a0e469129db5844c3490007a8289431039e2`
 
-Use Mesa p0175 with `patches/debug/0001`–`0009` applied, then apply Mesa `0001` and `0003` below. Apply Anland `0002` only to its matching checkout:
+Use Mesa p0175 with `patches/debug/0001`–`0010` applied, then apply Mesa `0001` and `0003` below. Apply Anland `0002` only to its matching checkout:
 
 ```sh
 git -C "$MESA" am "$PWD/muic/0001-panvk-kbase-anland-staging.patch"

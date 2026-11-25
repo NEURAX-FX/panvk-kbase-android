@@ -1311,3 +1311,37 @@ ICD SHA-256: `8bb86be9f190a424eff893892d8c6c73e9fb54470271229f73da83702bdd180c`.
 It is ELF64 AArch64 with maximum required `GLIBC_2.38`, with kbase, Wayland
 and X11 WSI compiled in. `/opt/panvk/current` and the running compositor were
 left unchanged.
+
+## Xwayland defaults to DRI3 dma-buf on kbase
+
+`0010-panvk-xwayland-dmabuf-default.patch` applies after `0001`–`0009`.
+When kbase can export dma-bufs and the Xwayland connection advertises DRI3
+and Present, PanVK defaults to standard DRI3 pixmap import without an
+environment variable. Other X servers (including Xvfb) keep the existing
+CPU path. The `PANVK_KBASE_DRI3=1` override still forces standard DRI3 on
+X11, and `raw` / `termux` still select the private Termux transport.
+`PANVK_KBASE_DRI3=0` restores X11 CPU readback without disabling native
+Wayland dma-buf; `MESA_VK_WSI_DEBUG=sw` forces CPU presentation on both.
+
+On MT6989/Mali-G720 with Xwayland 24.1.15, an isolated `vkcube` run sent
+Mali dma-buf FDs over DRI3 and exited normally with no transport override
+(120 IMMEDIATE frames and 12 FIFO frames). Each CPU override completed
+without sending dma-buf FDs, Xvfb presented 12 frames, and native Wayland
+still selected `wl_shm` or `zwp_linux_buffer_params_v1` according to
+`PANVK_WSI_WAYLAND_DMABUF`. These are transport and completion checks, not
+an Android scanout pixel test.
+
+MT6989's system ICD (`/opt/panvk/current` → `xwayland-dmabuf-5ee6b6ff`) and
+Anland's pinned ICD were switched to the verified build without restarting
+the desktop. After installation, each manifest completed a 30-frame FIFO
+run with no transport override and sent Mali dma-buf FDs over DRI3. For a
+per-process rollback, use `PANVK_KBASE_DRI3=0`; to restore both previous
+userspace ICDs on that device, run
+`bash /root/panvk-wsi-debug/backup-xwayland-dmabuf-5ee6b6ff/rollback.sh`.
+
+The earlier live session with the previous ICD and forced DRI3 measured
+about 2 FPS in FIFO. This was not reproduced in the isolated session using
+the production Niri binary (old forced DRI3 and new default both exceeded
+100 FPS in the short smoke run). The live desktop was not restarted or
+retested after installation.
+
